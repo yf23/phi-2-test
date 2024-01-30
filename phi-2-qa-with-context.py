@@ -41,7 +41,7 @@ print(answer)
 
 # Answer the question with context
 print(f"\nAnswer with context: {question}")
-prompt = f"""Instruct:Answer based on context:\n\n{contexts}\n\n{question}\nOutput:"""
+prompt = f"""Instruct:Answer only based on the following context:\n{contexts}\nQuestion:{question}\nOutput:"""
 output = get_model_output(model, tokenizer, prompt, answer_length=300)
 answer = output[len(prompt):]
 print(answer)
