@@ -30,15 +30,15 @@ nccv5_post = read_text("./text/Azure_nc_h100_v5_blog_post.txt")
 contexts = ncv5_post + '\n' + nccv5_post
 
 # Answer the question without context
-print("Answer without context:")
+print(f"\nAnswer without context: {question}")
 prompt = question
-output = get_model_output(model, tokenizer, prompt, answer_length=200)
+output = get_model_output(model, tokenizer, prompt, answer_length=300)
 answer = output[len(prompt):]
 print(answer)
 
 # Answer the question with context
-print("Answer with context:")
+print(f"\nAnswer with context: {question}")
 prompt = f"""Instruct:Answer based on context:\n\n{contexts}\n\n{question}\nOutput:"""
-output = get_model_output(model, tokenizer, prompt, answer_length=200)
+output = get_model_output(model, tokenizer, prompt, answer_length=300)
 answer = output[len(prompt):]
 print(answer)
