@@ -11,6 +11,6 @@ inputs = tokenizer('''def print_prime(n):
    Print all primes between 1 and n
    """''', return_tensors="pt", return_attention_mask=False)
 
-outputs = model.generate(**inputs, max_length=200)
+outputs = model.generate(**inputs, max_length=100)
 text = tokenizer.batch_decode(outputs)[0]
 print(text)
