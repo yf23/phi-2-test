@@ -29,7 +29,7 @@ question = "What is the difference between NC and NCC H100 VMs?"
 
 # Load context
 ncv5_post = read_text(f"{os.path.dirname(os.path.realpath(__file__))}/text/Azure_nc_h100_v5_blog_post.txt")
-nccv5_post = read_text(f"{os.path.dirname(os.path.realpath(__file__))}/text/Azure_nc_h100_v5_blog_post.txt")
+nccv5_post = read_text(f"{os.path.dirname(os.path.realpath(__file__))}/text/Azure_ncc_h100_v5_blog_post.txt")
 contexts = ncv5_post + '\n' + nccv5_post
 
 # Answer the question without context
