@@ -1,3 +1,4 @@
+import os
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -27,8 +28,8 @@ if tokenizer.pad_token is None:
 question = "What is the difference between Azure NCv5 and NCCv5?"
 
 # Load context
-ncv5_post = read_text("./text/Azure_nc_h100_v5_blog_post.txt")
-nccv5_post = read_text("./text/Azure_nc_h100_v5_blog_post.txt")
+ncv5_post = read_text(f"{os.path.dirname(os.path.realpath(__file__))}/text/Azure_nc_h100_v5_blog_post.txt")
+nccv5_post = read_text(f"{os.path.dirname(os.path.realpath(__file__))}/text/Azure_nc_h100_v5_blog_post.txt")
 contexts = ncv5_post + '\n' + nccv5_post
 
 # Answer the question without context
