@@ -1,0 +1,48 @@
+Introducing Azure NC H100 v5 VMs for mid-range AI and HPC workloads
+Sherry Wang
+Published Nov 15 2023 08:25 AM  4,951 Views
+
+Today at Ignite, Microsoft is announcing the public preview of the NC H100 v5 Virtual Machine Series, the latest addition to our portfolio of purpose-built infrastructure for High Performance Computing (HPC) and Artificial Intelligence (AI) workloads.
+
+The new Azure NC H100 v5 series is powered by NVIDIA Hopper Generation H100 NVL 94GB PCIe Tensor Core GPUs and 4th Gen AMD EPYC™ Genoa processors, delivering powerful performance and flexibility for a wide range of AI and HPC applications.
+
+What are the benefits of NC H100 v5 VMs?
+
+Azure NC H100 v5 VMs are designed to accelerate a broad range of AI and HPC workloads, including:
+
+Mid-range AI model training and generative inferencing: Unlike the massively scalable ND-series powered by the same NVIDIA Hopper technology, our NC-series is optimized for training and inferencing AI models that require smaller data size and a smaller number of GPU parallelism. This includes generative AI models such as DALL-E, which creates original images based on text prompt, as well as traditional discriminative AI models such as image classification, object detection, and natural language processing focused on accuracy of prediction rather than the generation of new data.
+Traditional HPC modelling and simulation workloads: Azure NC H100 v5 VMs are also an ideal platform for running various HPC workloads that require high compute, memory, and GPU offload acceleration. This includes scientific workloads such as computational fluid dynamics (CFD), molecular dynamics, quantum chemistry, weather forecasting and climate modeling, and financial analytics.
+Azure NC H100 v5 VMs offer the following features and capabilities:
+
+Up to 2x H100 NVL PCIe GPU accelerators: Each H100 NVL PCIe GPU has 94GB of HBM3 memory, providing more than 17% additional memory capacity (per GPU) and almost double the HBM memory bandwidth compared to the prior generation A100 GPUs. The H100 also support PCIe Gen5, providing the highest communication speeds (128GB/s bi-directional) between the host processor and the GPU. Two H100 NVL PCIe GPUs can be combined via NVLink to provide up to 188GB of HBM3 memory, enabling a large level of HBM memory capacity and performance.
+4th Gen AMD EPYC™ Genoa processors: Azure NC H100 v5 VMs are powered by the latest AMD EPYC™ Genoa processors, which support PCIe Gen5 and DDR5 memory. The AMD EPYC™ Genoa processors deliver exceptional performance and scalability for both CPU-bound and GPU-bound workloads.
+Flexible and modular design: The NC H100 v5 VMs offer two classes of VMs, ranging from one to two NVIDIA H100 94GB PCIe Tensor Core GPUs. This allows customers to choose the optimal VM size and configuration for their specific AI and HPC workloads and achieve the best price/performance ratio.
+
+How do NC H100 v5 VMs compare to the previous generation?
+
+The NC H100 v5 VMs offer significant performance improvements over the previous s of Azure VMs in the NC series, due to the following factors:
+
+Up to 2x GPU compute performance: The H100 NVL PCIe GPUs provide up to 2x the compute performance, 2x the memory bandwidth, and 17% larger HBM GPU memory capacity per VM compared to the A100 GPUs. This means that the NC H100 v5 VMs can manage larger and more complex AI and HPC models and process more data faster and more efficiently.
+2x Host to GPU interconnect bandwidth per GPU: The H100 NVL PCIe GPUs support PCIe Gen5, which provides the highest communication speeds (128GB/s bi-directional) between the host processor and the GPU. This reduces the latency and overhead of data transfer and enables faster and more scalable AI and HPC applications.
+per GPU VM: The NC H100 v5 VMs are powered by the 4th Gen AMD EPYC™ Genoa processors. This provides 1.6x vCPU cores per GPU VM compared to the previous generation, which improves the CPU performance for AI and HPC workloads.
+host memory capacity per GPU VM: The NC H100 v5 VMs also offer 1.4x more host memory capacity per GPU VM compared to the previous generation, which allows for more data caching and buffering, and reduces the memory pressure and contention for AI and HPC workloads.
+2x front end network bandwidth per GPU VM: The NC H100 v5 VMs support up to 2x the front-end network bandwidth per GPU VM compared to the previous generation, which enables faster and more reliable data ingestion and output for AI and HPC workloads.
+ 
+What are the performance test results of NC H100 v5 VMs?
+
+We have conducted initial performance tests on the NC H100 v5 VMs using several AI benchmarks and workloads. The results show that the NC H100 v5 VMs can achieve between 1.6x-1.9x inference performance on one GPU size depending on the types of workloads. Performance is expected to improve over time following further software optimization releases from NVIDIA:
+
+BERT-Large inference: BERT-Large is a large-scale language model that can be used for various natural language processing tasks, such as question answering, sentiment analysis, and text summarization. The results show that the NC H100 v5 VMs can achieve up to compared to the previous generation.
+ResNet-50 inference: ResNet-50 is a deep convolutional neural network that can be used for various computer vision tasks, such as image classification, object detection, and face recognition. The results show that the NC H100 v5 VMs can achieve up to compared to the previous generation.
+ 
+Introducing Azure NC H100 v5 VMs for mid-range AI and HPC workloads
+			
+GPT-J is a large-scale language model with 6 billion parameters, based on GPT-3 architecture, and submitted as part of MLPerf Inference v3.1 benchmark. GPT-J can generate natural and coherent text for various natural language generation tasks, such as text summarization, text completion, and text generation. GPT-J inference requires high compute, memory, and communication bandwidth to process the large amount of data and parameters involved in the model.
+
+We compared the inference performance of GPT-J on the dual GPU VM version of Azure NC H100 v5 virtual machine vs an on-premise system powered by the previous generation of NVIDIA A100 Tensor Core GPUs.. Our results show that the NC H100 v5 VMs can achieve up to 2.5x performance improvements over the prior results (Figure 2).
+
+How to access the preview of the Azure NC H100 v5-series
+
+The NC H100 v5-series are currently in public preview and available in the Azure South-Central US region. Availability will expand to additional regions in the coming months..
+
+If you are interested in trying out the NC H100 v5-series, sign up for preview here: https://aka.ms/NCadsH100v5PreviewSignup

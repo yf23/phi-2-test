@@ -1,0 +1,49 @@
+Announcing Azure confidential VMs with NVIDIA H100 Tensor Core GPUs in Preview
+Krishnaprasad Hande
+Published Nov 15 2023 07:59 AM  5,816 Views
+
+Today, we are excited to announce the preview of Azure confidential VMs with NVIDIA H100 Tensor core GPUs.  These VMs are ideal for training, fine-tuning and serving popular open-source models, such as Stable Diffusion and its larger variants (SDXL, SSD…) and language models (Zephyr, Falcon, GPT2, MPT, Llama2. Wizard, Xwin).
+
+Azure is constantly innovating in security to provide the best protection for its customers' data and applications. One of the innovations that Azure has been pioneering is the enablement of confidential computing. Confidential computing is the protection of data in use by performing computation in hardware-based, attested Trusted Execution Environments (TEEs). These TEEs prevent unauthorized access or modification of application code and data during use.
+
+While Azure has been leading the enablement of confidential computing on CPUs, there is also a need to enable confidential computing on GPUs. GPUs are widely used for high-performance computing, machine learning, and graphics rendering, which can involve processing large amounts of sensitive data. By enabling confidential computing on GPUs, Azure offers customers more options and flexibility to run their workloads securely and efficiently on the cloud.
+
+“As AI scales across every industry, protecting company and customer data is paramount — and Microsoft Azure and NVIDIA have collaborated to engineer a solution to this challenge,” said Ian Buck, Vice President of Hyperscale and HPC at NVIDIA. “The Azure confidential VMs with NVIDIA H100 GPUs bring a complete, secure computing stack from the VMs to the GPU architecture itself, enabling users to build and deploy AI applications with confidential computing on Microsoft Azure while knowing that their data and AI models remain protected end to end.”
+
+These Virtual Machines have the following features:
+Next-generation CPUs: AMD 4th Gen EPYC processors with SEV-SNP technology to meet CPU performance for AI training/inference.
+AI state-of-the-art GPUs: NVIDIA H100 Tensor Core GPUs with 94GB of High Bandwidth Memory 3 (HBM3).
+Trusted Execution Environment (TEE) that spans confidential VM on the CPU and attached GPU, enabling secure offload of data, models and computation to the GPU.  
+VM memory encryption using hardware-generated encryption keys.  
+Encrypted communication over PCIe between confidential VM and GPU.
+Attestation: Ability for CPU and GPU to generate remotely verifiable attestation reports capturing CPU and GPU security critical hardware and firmware configuration.
+
+Confidential computing support
+NCC H100 v5 VM SKUs support hardware-based TEEs that protect VMs against privileged host components and attackers. With this SKU, GPUs are assigned to the VM in confidential mode. In this mode, the GPU High Bandwidth Memory 3 (HBM3) and security critical configuration registers are isolated and protected against unauthorized access. When the GPU device driver is loaded in the confidential VM, it establishes a secure channel with GPU and uses this channel for all subsequent data transfers between CPU and GPU. Additionally, customers can request attestation to verify that the VMs and GPUs are running a correctly configured TEE before launching sensitive applications and releasing secrets such as data encryption keys. Almost all applications, including those that use NVIDIA CUDA for acceleration, can be transparently executed in these VMs.
+
+Use cases across industries
+Use cases for privacy preserving GPU based analytics and ML span multiple verticals:
+Healthcare: For analysis of medical images, such as X-rays, CT scans, or MRIs. This can help protect the privacy of the patients and demonstrate compliance.
+Finance: For analysis of financial data, such as transactions, portfolios, or risk models. This can protect the confidentiality of sensitive financial data and models.
+Government: For analysis of data collected by various government agencies, such as census, tax, and national security. This can help protect the privacy of citizens and bolster national security.
+
+Confidential GPU across industries
+We are already partnering with several organizations to accelerate their journey towards confidential AI and many of our customers have already expressed interest in this preview.
+	
+“Our experience with the Azure confidential computing A100 GPU preview has been excellent, both in terms of performance and engineering. Running our experiment as a Docker container directly on the GPU without any significant modifications to our code is very practical and timesaving. We plan to expand our experimentation to include reinforcement learning for recommendations at the execution of procurement-to-pay processes using the newly announced Azure confidential VMs with NVIDIA H100 Tensor Core GPUs.” 
+- Dr. Laurent Gomez, OSCP, TOGAF Head of Security for Distributed Enterprise Systems, SAP Security Research
+	
+“RBC has been working very closely with Microsoft on confidential computing initiatives since the early days of technology availability within Azure. We’ve leveraged the amazing benefits of confidential computing and integrated it into our own data clean room platform known as Arxis (www.rbc.com/arxis). As we continue to develop our platform capabilities, we fully recognize the importance of privacy preserving machine learning inference and training to protect sensitive customer data within GPUs. We are looking forward to leveraging Azure confidential VMs with NVIDIA H100 Tensor Core GPUs through the Azure platform!”
+– Justin Simonelis, Director, Confidential Computing
+	
+“We are thrilled to partner with Azure Confidential Computing to enable EscrowAI’s class leading privacy preserving machine learning inference and training against healthcare data by leveraging Azure confidential VMs with NVIDIA H100 Tensor Core GPUs all while upholding the utmost confidentiality of PHI data”
+- Sudish Mogli , Vice President, Engineering, BeeKeeperAI
+
+“At iExec, we provide a Blockchain-based platform for trading computing resources, including servers, applications and data. Thanks to confidential computing, our infrastructure protects the confidentiality and ownership of the traded datasets and ensures the trust and transparency of the computations. Since last year, thanks to our collaboration with Microsoft on GPU based confidential computing (with A100 PR program), iExec has started tackling the unique challenges related to AI. Our end goal is to integrate Azure GPU-based Confidential Computing with the iExec platform to enable the monetization of AI models while preserving the privacy and the intellectual property across a wide range of industries, from healthcare to fintech to cyber-security. We are pleased with how Azure GPU Confidential Computing can help us better manage compliance with regulations such as GDPR and create new opportunities for our customers on trusted AI computing.”
+- Anthony Simonet-Boulogne, Head of R&D, iExec Blockchain Tech
+	
+“As pioneers in the field of speech recognition solutions harnessing the power of GPUs, we are thrilled to enhance the capabilities of speech recognition for the era of AI. Our collaboration with the Azure confidential computing team and their Azure confidential VMs with NVIDIA H100 Tensor Core GPUs is poised to usher in a new era of privacy preserving speech recognition excellence in Azure”
+- Nigel Cannings, CTO, Intelligent Voice
+
+“With its sensitive-data collaboration SaaS platform, Multyx enables creation of new enterprise data and AI applications previously impossible or too lengthy, costly, or risky to implement. Azure confidential VMs with NVIDIA H100 Tensor Core GPUs hosted within Azure Confidential Computing, boosts our platform with new capabilities and efficiencies especially for Gen AI and LLM-based business applications across banking, insurance, and related enterprises"
+- Ophir Holder, Ph.D., CEO and Co-Founder of Multyx.
