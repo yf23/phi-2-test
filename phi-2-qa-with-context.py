@@ -26,6 +26,7 @@ if tokenizer.pad_token is None:
 
 # User input question
 question = "What is the difference between NC and NCC H100 v5 VMs?"
+instruction = "Instruction:You should only answer the given question, and stop when you finish answering. Do not start other topics."
 
 # Load context
 ncv5_post = read_text(f"{os.path.dirname(os.path.realpath(__file__))}/text/Azure_nc_h100_v5_blog_post.txt")
@@ -34,14 +35,21 @@ contexts = ncv5_post + '\n' + nccv5_post
 
 # Answer the question without context
 print(f"\nAnswer without context: {question}")
-prompt = f"Answer the following question:\n{question}\nStop when you finish answering.\nOutput:"
+prompt = f'''
+Instruction:You should only answer the given question, and stop when you finish answering. Do not start other topics.
+Question:{question}
+Output:'''
 output = get_model_output(model, tokenizer, prompt, answer_length=300)
 answer = output[len(prompt):]
 print(answer)
 
 # Answer the question with context
 print(f"\nAnswer with context: {question}")
-prompt = f"""Answer using the following context:\n{contexts}\nQuestion:{question}\nStop when you finish answering.\nOutput:"""
+prompt = f'''
+Instruction:You should only answer the given question with given context, and stop when you finish answering. Do not start other topics.
+Context:{contexts}
+Question:{question}
+Output:'''
 output = get_model_output(model, tokenizer, prompt, answer_length=500)
 answer = output[len(prompt):]
 print(answer)
