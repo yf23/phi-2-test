@@ -25,7 +25,7 @@ if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 
 # User input question
-question = "What is the difference between NC and NCC H100 VMs?"
+question = "What is the difference between NC and NCC H100 v5 VMs?"
 
 # Load context
 ncv5_post = read_text(f"{os.path.dirname(os.path.realpath(__file__))}/text/Azure_nc_h100_v5_blog_post.txt")
@@ -41,7 +41,7 @@ print(answer)
 
 # Answer the question with context
 print(f"\nAnswer with context: {question}")
-prompt = f"""Instruct:Answer only based on the following context:\n{contexts}\nQuestion:{question}\nOutput:"""
+prompt = f"""Answer with the following context:\n{contexts}\nQuestion:{question}\nOutput:"""
 output = get_model_output(model, tokenizer, prompt, answer_length=300)
 answer = output[len(prompt):]
 print(answer)
