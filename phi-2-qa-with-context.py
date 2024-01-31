@@ -33,22 +33,20 @@ nccv5_post = read_text(f"{os.path.dirname(os.path.realpath(__file__))}/text/Azur
 contexts = ncv5_post + '\n' + nccv5_post
 
 # Answer the question without context
-print(f"\nAnswer without context: {question}")
+print(f"\nAnswer without context: {question}\n")
 prompt = f'''
 Instruction:Only answer the given question. Do not start new questions.
-Question:{question}
-Answer:'''
+{question}'''
 output = get_model_output(model, tokenizer, prompt, answer_length=250)
 answer = output[len(prompt):]
 print(answer)
 
 # Answer the question with context
-print(f"\nAnswer with context: {question}")
+print(f"\nAnswer with context: {question}\n")
 prompt = f'''
 Context:{contexts}
 Instruction:Only answer the given question with context provided. Do not start new questions.
-Question:{question}
-Answer:'''
+{question}'''
 output = get_model_output(model, tokenizer, prompt, answer_length=250)
 answer = output[len(prompt):]
 print(answer)
