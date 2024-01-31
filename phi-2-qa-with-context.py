@@ -35,7 +35,7 @@ contexts = ncv5_post + '\n' + nccv5_post
 # Answer the question without context
 print(f"\nAnswer without context: {question}")
 prompt = f'''
-Instruction:You should only answer the given question. You should stop when you finish answering. Do not start new questions or topics.
+Instruction:Only answer the given question. Stop when you finish answering. Do not start new questions or topics.
 Question:{question}
 Output:'''
 output = get_model_output(model, tokenizer, prompt, answer_length=300)
@@ -45,7 +45,7 @@ print(answer)
 # Answer the question with context
 print(f"\nAnswer with context: {question}")
 prompt = f'''
-Instruction:You should only answer the given question with context provided. You should stop when you finish answering. Do not start new questions or topics.
+Instruction:Only answer the given question with context provided. Stop when you finish answering. Do not start new questions or topics.
 Context:{contexts}
 Question:{question}
 Output:'''
