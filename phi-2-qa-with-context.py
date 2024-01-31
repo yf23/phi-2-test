@@ -26,7 +26,6 @@ if tokenizer.pad_token is None:
 
 # User input question
 question = "What is the difference between NC and NCC H100 v5 VMs?"
-instruction = "Instruction:You should only answer the given question, and stop when you finish answering. Do not start other topics."
 
 # Load context
 ncv5_post = read_text(f"{os.path.dirname(os.path.realpath(__file__))}/text/Azure_nc_h100_v5_blog_post.txt")
