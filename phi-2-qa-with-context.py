@@ -34,14 +34,14 @@ contexts = ncv5_post + '\n' + nccv5_post
 
 # Answer the question without context
 print(f"\nAnswer without context: {question}")
-prompt = question
+prompt = f"Answer the following question only:\n{question}\nOutput:"
 output = get_model_output(model, tokenizer, prompt, answer_length=300)
 answer = output[len(prompt):]
 print(answer)
 
 # Answer the question with context
 print(f"\nAnswer with context: {question}")
-prompt = f"""Answer using the following context:\n{contexts}\nQuestion:{question}\nOutput:"""
-output = get_model_output(model, tokenizer, prompt, answer_length=300)
+prompt = f"""Answer the following question only, using the following context:\n{contexts}\nQuestion:{question}\nOutput:"""
+output = get_model_output(model, tokenizer, prompt, answer_length=500)
 answer = output[len(prompt):]
 print(answer)
