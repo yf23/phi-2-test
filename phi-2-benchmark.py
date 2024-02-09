@@ -10,7 +10,8 @@ N_ITERATIONS = 100
 # Benchmark time placeholder
 time_tokenizing_list = []
 time_generation_list = []
-throughput_list = []
+total_throughput_list = []
+generation_throughput_list = []
 
 # Load the model and tokenizer
 torch.set_default_device("cuda")
@@ -57,11 +58,15 @@ for _ in range(N_ITERATIONS):
     time_generation_list.append(time_generation)
 
     # Calculate throughput
-    throughput = BATCH_SIZE * OUTPUT_TOKEN_LENGTH / time_generation
-    throughput_list.append(throughput)
+    generation_throughput = BATCH_SIZE * OUTPUT_TOKEN_LENGTH / time_generation
+    total_throughput = BATCH_SIZE * OUTPUT_TOKEN_LENGTH / (time_generation + time_tokenizing)
+    generation_throughput_list.append(generation_throughput)
+    total_throughput_list.append(total_throughput)
 
 
 # Print benchmark results
 print(f"Average time tokenizing: {sum(time_tokenizing_list) / N_ITERATIONS}s")
 print(f"Average time generating: {sum(time_generation_list) / N_ITERATIONS}s")
-print(f"Average throughput: {sum(throughput_list) / N_ITERATIONS} tokens/s")
+print(f"Average generation throughput: {sum(generation_throughput_list) / N_ITERATIONS} tokens/s")
+print(f"Average total throughput: {sum(total_throughput_list) / N_ITERATIONS} tokens/s")
+
