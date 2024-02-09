@@ -6,7 +6,7 @@ MODEL_NAME = "microsoft/phi-2"
 INPUT_TOKEN_LENGTH = 1024
 OUTPUT_TOKEN_LENGTH = 256
 BATCH_SIZE = 64
-N_ITERATIONS = 100
+N_ITERATIONS = 10
 
 
 def run_model_benchmark(model_name, batch_prompt):
