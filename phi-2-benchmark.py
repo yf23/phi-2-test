@@ -7,8 +7,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 MODEL_NAME = "microsoft/phi-2"
 INPUT_TOKEN_LENGTH_LIST = [32, 256, 1024, 2048]
-OUTPUT_TOKEN_LENGTH = [1, 32, 64, 128]
-BATCH_SIZE = [1, 8, 32]
+OUTPUT_TOKEN_LENGTH_LIST = [1, 32, 64, 128]
+BATCH_SIZE_LIST = [1, 8, 32]
 N_ITERATIONS = 5
 
 
@@ -210,9 +210,9 @@ if __name__ == "__main__":
     )
 
     # Run benchmarks
-    for batch_size in BATCH_SIZE:
-        for input_token_length in INPUT_TOKEN_LENGTH_LIST:
-            for output_token_length in OUTPUT_TOKEN_LENGTH:
+    for input_token_length in INPUT_TOKEN_LENGTH_LIST:
+        for output_token_length in OUTPUT_TOKEN_LENGTH_LIST:
+            for batch_size in BATCH_SIZE_LIST:
                 results = run_benchmark(
                     MODEL_NAME,
                     input_token_length,
