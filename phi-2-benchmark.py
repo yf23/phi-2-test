@@ -15,23 +15,23 @@ N_ITERATIONS = 10
 
 def run_model(model_name, batch_prompt, input_token_length, output_token_length):
     # Load the model
-    time_start_model_loading = time.time()
+    time_start_model_loading = time.perf_counter()
     model = AutoModelForCausalLM.from_pretrained(
         model_name, torch_dtype="auto", trust_remote_code=True
     )
-    time_end_model_loading = time.time()
+    time_end_model_loading = time.perf_counter()
     time_model_loading = time_end_model_loading - time_start_model_loading
 
     # Load the tokenizer
-    time_start_tokenizer_loading = time.time()
+    time_start_tokenizer_loading = time.perf_counter()
     tokenizer = AutoTokenizer.from_pretrained("microsoft/phi-2", trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    time_end_tokenizer_loading = time.time()
+    time_end_tokenizer_loading = time.perf_counter()
     time_tokenizer_loading = time_end_tokenizer_loading - time_start_tokenizer_loading
 
     # Tokenize prompt
-    time_start_tokenizing = time.time()
+    time_start_tokenizing = time.perf_counter()
     input_tokens = tokenizer(
         batch_prompt,
         return_tensors="pt",
@@ -39,18 +39,18 @@ def run_model(model_name, batch_prompt, input_token_length, output_token_length)
         max_length=input_token_length,
         truncation=True,
     )
-    time_end_tokenizing = time.time()
+    time_end_tokenizing = time.perf_counter()
     time_tokenizing = time_end_tokenizing - time_start_tokenizing
 
     # Generate output
-    time_start_generation = time.time()
+    time_start_generation = time.perf_counter()
     outputs = model.generate(
         **input_tokens,
         pad_token_id=tokenizer.pad_token_id,
         min_new_tokens=output_token_length,
         max_new_tokens=output_token_length,
     )
-    time_end_generation = time.time()
+    time_end_generation = time.perf_counter()
     time_generation = time_end_generation - time_start_generation
 
     # Clean up memory
