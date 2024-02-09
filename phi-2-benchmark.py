@@ -73,7 +73,10 @@ def run_model_benchmark(model_name, batch_prompt):
 
 
 if __name__ == "__main__":
-    set_global_logging_level(logging.ERROR, ["transformers", "nlp", "torch", "tensorflow", "tensorboard", "wandb"])
+    set_global_logging_level(
+        logging.ERROR,
+        ["transformers", "nlp", "torch", "tensorflow", "tensorboard", "wandb", "tqdm"],
+    )
     torch.set_default_device("cuda")
 
     # Benchmark time placeholder
