@@ -2,8 +2,8 @@ import gc
 import re
 import time
 import torch
+import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import logging
 
 
 MODEL_NAME = "microsoft/phi-2"
@@ -11,13 +11,6 @@ INPUT_TOKEN_LENGTH = 2048
 OUTPUT_TOKEN_LENGTH = 128
 BATCH_SIZE = 32
 N_ITERATIONS = 10
-
-
-def set_global_logging_level(level=logging.ERROR, prefices=[""]):
-    prefix_re = re.compile(rf'^(?:{ "|".join(prefices) })')
-    for name in logging.root.manager.loggerDict:
-        if re.match(prefix_re, name):
-            logging.getLogger(name).setLevel(level)
 
 
 def run_model_benchmark(model_name, batch_prompt):
@@ -73,10 +66,7 @@ def run_model_benchmark(model_name, batch_prompt):
 
 
 if __name__ == "__main__":
-    set_global_logging_level(
-        logging.ERROR,
-        ["transformers", "nlp", "torch", "tensorflow", "tensorboard", "wandb", "tqdm"],
-    )
+    transformers.logging.set_verbosity_critical()
     torch.set_default_device("cuda")
 
     # Benchmark time placeholder
