@@ -29,7 +29,7 @@ batch_prompt = [prompt for _ in range(BATCH_SIZE)]
 
 for _ in range(N_ITERATIONS):
     print(f"ITERATION: {_}/{N_ITERATIONS}")
-    
+
     # Tokenize prompt
     time_start_tokenizing = time.time()
     input_tokens = tokenizer(
@@ -37,6 +37,7 @@ for _ in range(N_ITERATIONS):
         return_tensors="pt",
         return_attention_mask=False,
         max_length=INPUT_TOKEN_LENGTH,
+        truncation=True
     )
     time_end_tokenizing = time.time()
     time_tokenizing = time_end_tokenizing - time_start_tokenizing
