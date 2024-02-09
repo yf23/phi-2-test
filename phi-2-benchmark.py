@@ -2,6 +2,10 @@ import gc
 import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
+import logging
+
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("torch").setLevel(logging.ERROR)
 
 MODEL_NAME = "microsoft/phi-2"
 INPUT_TOKEN_LENGTH = 1024
