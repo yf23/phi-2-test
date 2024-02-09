@@ -66,7 +66,7 @@ def run_model_benchmark(model_name, batch_prompt):
 
 
 if __name__ == "__main__":
-    transformers.logging.set_verbosity_critical()
+    transformers.logging.set_verbosity(transformers.logging.CRITICAL)
     torch.set_default_device("cuda")
 
     # Benchmark time placeholder
