@@ -30,7 +30,7 @@ prompt = " ".join([text for _ in range(300)])
 batch_prompt = [prompt for _ in range(BATCH_SIZE)]
 
 for _ in range(N_ITERATIONS):
-    print(f"ITERATION: {_+1}/{N_ITERATIONS}")
+    print(f"ITERATION: {_+1}/{N_ITERATIONS}", end="  ")
 
     # Tokenize prompt
     time_start_tokenizing = time.time()
@@ -59,14 +59,22 @@ for _ in range(N_ITERATIONS):
 
     # Calculate throughput
     generation_throughput = BATCH_SIZE * OUTPUT_TOKEN_LENGTH / time_generation
-    total_throughput = BATCH_SIZE * OUTPUT_TOKEN_LENGTH / (time_generation + time_tokenizing)
+    total_throughput = (
+        BATCH_SIZE * OUTPUT_TOKEN_LENGTH / (time_generation + time_tokenizing)
+    )
     generation_throughput_list.append(generation_throughput)
     total_throughput_list.append(total_throughput)
 
+    print(f"{time_generation + time_tokenizing}s, {total_throughput} tokens/s")
+
 
 # Print benchmark results
-print(f"Average total latency: {(sum(time_tokenizing_list) + sum(time_generation_list)) / N_ITERATIONS}s")
+print(
+    f"Average total latency: {(sum(time_tokenizing_list) + sum(time_generation_list)) / N_ITERATIONS}s"
+)
 print(f"Average tokenization latency: {sum(time_tokenizing_list) / N_ITERATIONS}s")
 print(f"Average generation latency: {sum(time_generation_list) / N_ITERATIONS}s")
 print(f"Average total throughput: {sum(total_throughput_list) / N_ITERATIONS} tokens/s")
-print(f"Average generation throughput: {sum(generation_throughput_list) / N_ITERATIONS} tokens/s")
+print(
+    f"Average generation throughput: {sum(generation_throughput_list) / N_ITERATIONS} tokens/s"
+)
