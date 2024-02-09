@@ -28,6 +28,8 @@ prompt = " ".join([text for _ in range(300)])
 batch_prompt = [prompt for _ in range(BATCH_SIZE)]
 
 for _ in range(N_ITERATIONS):
+    print(f"ITERATION: {_}/{N_ITERATIONS}")
+    
     # Tokenize prompt
     time_start_tokenizing = time.time()
     input_tokens = tokenizer(
