@@ -7,15 +7,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 MODEL_NAME = "microsoft/phi-2"
-INPUT_TOKEN_LENGTH_LIST = [128]
-OUTPUT_TOKEN_LENGTH = [1]
-BATCH_SIZE = [1]
-N_ITERATIONS = 1
-
-# INPUT_TOKEN_LENGTH_LIST = [128, 256, 512, 1024, 2048]
-# OUTPUT_TOKEN_LENGTH = [1, 32, 64, 128]
-# BATCH_SIZE = [1, 8, 32]
-# N_ITERATIONS = 10
+INPUT_TOKEN_LENGTH_LIST = [128, 256, 512, 1024, 2048]
+OUTPUT_TOKEN_LENGTH = [1, 32, 64, 128]
+BATCH_SIZE = [1, 8, 32]
+N_ITERATIONS = 10
 
 
 def run_model(model_name, batch_prompt, input_token_length, output_token_length):
@@ -212,4 +207,7 @@ if __name__ == "__main__":
             "Throughput Generation (tokens/second)",
         ],
     )
-    df_results.to_csv(f'{MODEL_NAME.split("/")[-1]}_perf_data_{time.strftime("%Y%m%d%H%M%S")}.csv')
+    df_results.to_csv(
+        f'{MODEL_NAME.split("/")[-1]}_perf_data_{time.strftime("%Y%m%d%H%M%S")}.csv',
+        index=False,
+    )
