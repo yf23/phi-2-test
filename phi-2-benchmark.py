@@ -1,7 +1,6 @@
 import gc
 import time
 import torch
-import pandas as pd
 import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -11,6 +10,12 @@ INPUT_TOKEN_LENGTH_LIST = [32, 256, 1024, 2048]
 OUTPUT_TOKEN_LENGTH = [1, 32, 64, 128]
 BATCH_SIZE = [1, 8, 32]
 N_ITERATIONS = 10
+
+
+def write_csv_file(line, filepath, append=True):
+    mode = "a" if append else "w"
+    with open(filepath, mode) as f:
+        f.write(line + "\n")
 
 
 def run_model(model_name, batch_prompt, input_token_length, output_token_length):
@@ -181,33 +186,41 @@ if __name__ == "__main__":
     torch.set_default_device("cuda")
     transformers.logging.set_verbosity_error()
 
-    results = []
+    # Write header to CSV
+    columns = [
+        "model_name",
+        "input_token_length",
+        "output_token_length",
+        "batch_size",
+        "model_loading_latency",
+        "tokenizer_loading_latency",
+        "tokenization_latency",
+        "generation_latency",
+        "total_latency",
+        "throughput_e2e",
+        "throughput_generation",
+    ]
+    result_csv_filepath = (
+        f'{MODEL_NAME.split("/")[-1]}_perf_data_{time.strftime("%Y%m%d%H%M%S")}.csv'
+    )
+    write_csv_file(
+        ",".join(columns),
+        result_csv_filepath,
+        append=False,
+    )
+
+    # Run benchmarks
     for batch_size in BATCH_SIZE:
         for input_token_length in INPUT_TOKEN_LENGTH_LIST:
             for output_token_length in OUTPUT_TOKEN_LENGTH:
-                results.append(
-                    run_benchmark(
-                        MODEL_NAME,
-                        input_token_length,
-                        output_token_length,
-                        batch_size,
-                        N_ITERATIONS,
-                    )
+                results = run_benchmark(
+                    MODEL_NAME,
+                    input_token_length,
+                    output_token_length,
+                    batch_size,
+                    N_ITERATIONS,
                 )
-
-    df_results = pd.DataFrame(
-        results,
-        columns=[
-            "Model Loading Latency(s)",
-            "Tokenizer Loading Latency(s)",
-            "Tokenization Latency(s)",
-            "Generation Latency(s)",
-            "Total Latency(s)",
-            "Throughput E2E (tokens/second)",
-            "Throughput Generation (tokens/second)",
-        ],
-    )
-    df_results.to_csv(
-        f'{MODEL_NAME.split("/")[-1]}_perf_data_{time.strftime("%Y%m%d%H%M%S")}.csv',
-        index=False,
-    )
+                write_csv_file(
+                    f"{MODEL_NAME},{input_token_length},{output_token_length},{batch_size},{','.join(map(str, results))}",
+                    result_csv_filepath,
+                )
