@@ -5,18 +5,18 @@ import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
-MODEL_NAME = "microsoft/phi-2"
-INPUT_TOKEN_LENGTH_LIST = [32, 256, 1024, 2048]
-OUTPUT_TOKEN_LENGTH_LIST = [1, 32, 64, 128]
-BATCH_SIZE_LIST = [1, 8, 32]
-N_ITERATIONS = 5
-
-
-# MODEL_NAME = "openai-community/gpt2-xl"
-# INPUT_TOKEN_LENGTH_LIST = [32, 256, 512]
-# OUTPUT_TOKEN_LENGTH_LIST = [1, 32, 64, 256]
-# BATCH_SIZE_LIST = [1, 8, 32, 64]
+# MODEL_NAME = "microsoft/phi-2"
+# INPUT_TOKEN_LENGTH_LIST = [32, 256, 1024, 2048]
+# OUTPUT_TOKEN_LENGTH_LIST = [1, 32, 64, 128]
+# BATCH_SIZE_LIST = [1, 8, 32]
 # N_ITERATIONS = 5
+
+
+MODEL_NAME = "openai-community/gpt2-xl"
+INPUT_TOKEN_LENGTH_LIST = [32, 256, 512]
+OUTPUT_TOKEN_LENGTH_LIST = [1, 32, 64, 256]
+BATCH_SIZE_LIST = [1, 8, 32, 64]
+N_ITERATIONS = 5
 
 
 def write_csv_file(line, filepath, append=True):
