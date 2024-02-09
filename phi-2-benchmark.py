@@ -10,7 +10,7 @@ logging.getLogger("torch").setLevel(logging.ERROR)
 MODEL_NAME = "microsoft/phi-2"
 INPUT_TOKEN_LENGTH = 2048
 OUTPUT_TOKEN_LENGTH = 128
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 N_ITERATIONS = 10
 
 
