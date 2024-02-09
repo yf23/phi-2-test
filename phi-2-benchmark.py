@@ -100,7 +100,7 @@ def run_benchmark(
     batch_prompt = [prompt for _ in range(batch_size)]
 
     # Warm up
-    run_model(model_name, batch_prompt, input_token_length, output_token_length)
+    run_model(model_name, batch_prompt[0:1], 8, 1)
 
     # Start benchmarking
     for _ in range(n_iter):
