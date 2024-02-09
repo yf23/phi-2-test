@@ -212,4 +212,4 @@ if __name__ == "__main__":
             "Throughput Generation (tokens/second)",
         ],
     )
-    df_results.to_csv(f'{MODEL_NAME}_perf_data_{time.strftime("%Y%m%d%H%M%S")}.csv')
+    df_results.to_csv(f'{MODEL_NAME.split('/')[-1]}_perf_data_{time.strftime("%Y%m%d%H%M%S")}.csv')
