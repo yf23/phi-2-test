@@ -13,7 +13,7 @@ BATCH_SIZE = 32
 N_ITERATIONS = 10
 
 
-def run_model(model_name, batch_prompt):
+def run_model(model_name, batch_prompt, input_token_length, output_token_length):
     # Load the model
     time_start_model_loading = time.time()
     model = AutoModelForCausalLM.from_pretrained(
@@ -36,7 +36,7 @@ def run_model(model_name, batch_prompt):
         batch_prompt,
         return_tensors="pt",
         return_attention_mask=False,
-        max_length=INPUT_TOKEN_LENGTH,
+        max_length=input_token_length,
         truncation=True,
     )
     time_end_tokenizing = time.time()
@@ -47,8 +47,8 @@ def run_model(model_name, batch_prompt):
     outputs = model.generate(
         **input_tokens,
         pad_token_id=tokenizer.pad_token_id,
-        min_new_tokens=OUTPUT_TOKEN_LENGTH,
-        max_new_tokens=OUTPUT_TOKEN_LENGTH,
+        min_new_tokens=output_token_length,
+        max_new_tokens=output_token_length,
     )
     time_end_generation = time.time()
     time_generation = time_end_generation - time_start_generation
@@ -100,7 +100,7 @@ def run_benchmark(
     batch_prompt = [prompt for _ in range(batch_size)]
 
     # Warm up
-    run_model(model_name, batch_prompt)
+    run_model(model_name, batch_prompt, input_token_length, output_token_length)
 
     # Start benchmarking
     for _ in range(n_iter):
@@ -163,6 +163,7 @@ def run_benchmark(
 
 if __name__ == "__main__":
     torch.set_default_device("cuda")
+    transformers.logging.set_verbosity_error()
     run_benchmark(
         MODEL_NAME,
         INPUT_TOKEN_LENGTH,
