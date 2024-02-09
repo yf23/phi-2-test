@@ -1,15 +1,15 @@
 import gc
-import re
 import time
 import torch
+import pandas as pd
 import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 MODEL_NAME = "microsoft/phi-2"
 INPUT_TOKEN_LENGTH_LIST = [128, 256, 512, 1024, 2048]
-OUTPUT_TOKEN_LENGTH = [32, 64, 128]
-BATCH_SIZE = [1, 8, 32, 64]
+OUTPUT_TOKEN_LENGTH = [1, 32, 64, 128]
+BATCH_SIZE = [1, 8, 32]
 N_ITERATIONS = 10
 
 
@@ -144,41 +144,67 @@ def run_benchmark(
             print(f"\tThroughput (e2e): {throughput_e2e} tokens/second")
             print(f"\tThroughput (generation): {throughput_generation} tokens/second")
 
+    # Calculate average
+    time_e2e_avg = sum(time_e2e_list) / n_iter
+    time_model_loading_avg = sum(time_model_loading_list) / n_iter
+    time_tokenizer_loading_avg = sum(time_tokenizer_loading_list) / n_iter
+    time_tokenization_avg = sum(time_tokenization_list) / n_iter
+    time_generation_avg = sum(time_generation_list) / n_iter
+    throughput_e2e_avg = sum(throughput_e2e_list) / n_iter
+    throughput_generation_avg = sum(throughput_generation_list) / n_iter
+
     # Print summary benchmark results
     if verbose_summary:
         if verbose_run:
             print("\n\nSUMMARY BENCHMARK RESULTS")
-        print(f"\tEnd to end time: {sum(time_e2e_list)/n_iter} seconds")
-        print(f"\t\tModel loading time: {sum(time_model_loading_list)/n_iter} seconds")
-        print(
-            f"\t\tTokenizer loading time: {sum(time_tokenizer_loading_list)/n_iter} seconds"
-        )
-        print(f"\t\tTokenization time: {sum(time_tokenization_list)/n_iter} seconds")
-        print(f"\t\tGeneration time: {sum(time_generation_list)/n_iter} seconds")
-        print(f"\tThroughput (e2e): {sum(throughput_e2e_list)/n_iter} tokens/second")
-        print(
-            f"\tThroughput (generation): {sum(throughput_generation_list)/n_iter} tokens/second"
-        )
+        print(f"\tEnd to end time: {time_e2e_avg} seconds")
+        print(f"\t\tModel loading time: {time_model_loading_avg} seconds")
+        print(f"\t\tTokenizer loading time: {time_tokenizer_loading_avg} seconds")
+        print(f"\t\tTokenization time: {time_tokenization_avg} seconds")
+        print(f"\t\tGeneration time: {time_generation_avg} seconds")
+        print(f"\tThroughput (e2e): {throughput_e2e_avg} tokens/second")
+        print(f"\tThroughput (generation): {throughput_generation_avg} tokens/second")
         print("\n\n")
+
+    return (
+        time_model_loading_avg,
+        time_tokenizer_loading_avg,
+        time_tokenization_avg,
+        time_generation_avg,
+        time_e2e_avg,
+        throughput_e2e_avg,
+        throughput_generation_avg,
+    )
 
 
 if __name__ == "__main__":
     torch.set_default_device("cuda")
     transformers.logging.set_verbosity_error()
 
-    run_benchmark(
-        MODEL_NAME,
-        2048,
-        128,
-        64,
-        1)
-    # for batch_size in BATCH_SIZE:
-    #     for input_token_length in INPUT_TOKEN_LENGTH_LIST:
-    #         for output_token_length in OUTPUT_TOKEN_LENGTH:
-    #             run_benchmark(
-    #                 MODEL_NAME,
-    #                 input_token_length,
-    #                 output_token_length,
-    #                 batch_size,
-    #                 N_ITERATIONS,
-    #             )
+    results = []
+    for batch_size in BATCH_SIZE:
+        for input_token_length in INPUT_TOKEN_LENGTH_LIST:
+            for output_token_length in OUTPUT_TOKEN_LENGTH:
+                results.append(
+                    run_benchmark(
+                        MODEL_NAME,
+                        input_token_length,
+                        output_token_length,
+                        batch_size,
+                        N_ITERATIONS,
+                    )
+                )
+
+    df_results = pd.DataFrame(
+        results,
+        columns=[
+            "Model Loading Latency(s)",
+            "Tokenizer Loading Latency(s)",
+            "Tokenization Latency(s)",
+            "Generation Latency(s)",
+            "Total Latency(s)",
+            "Throughput E2E (tokens/second)",
+            "Throughput Generation (tokens/second)",
+        ],
+    )
+    df_results.to_csv(f"{MODEL_NAME}_perf_data_{time.strftime("%Y%m%d%H%M%S")}.csv")
