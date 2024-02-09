@@ -7,9 +7,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 MODEL_NAME = "microsoft/phi-2"
-INPUT_TOKEN_LENGTH = 2048
-OUTPUT_TOKEN_LENGTH = 128
-BATCH_SIZE = 32
+INPUT_TOKEN_LENGTH_LIST = [128, 256, 512, 1024, 2048]
+OUTPUT_TOKEN_LENGTH = [32, 64, 128]
+BATCH_SIZE = [1, 8, 32, 64]
 N_ITERATIONS = 10
 
 
@@ -159,15 +159,26 @@ def run_benchmark(
         print(
             f"\tThroughput (generation): {sum(throughput_generation_list)/n_iter} tokens/second"
         )
+        print("\n\n")
 
 
 if __name__ == "__main__":
     torch.set_default_device("cuda")
     transformers.logging.set_verbosity_error()
+
     run_benchmark(
         MODEL_NAME,
-        INPUT_TOKEN_LENGTH,
-        OUTPUT_TOKEN_LENGTH,
-        BATCH_SIZE,
-        N_ITERATIONS,
-    )
+        2048,
+        128,
+        64,
+        1)
+    # for batch_size in BATCH_SIZE:
+    #     for input_token_length in INPUT_TOKEN_LENGTH_LIST:
+    #         for output_token_length in OUTPUT_TOKEN_LENGTH:
+    #             run_benchmark(
+    #                 MODEL_NAME,
+    #                 input_token_length,
+    #                 output_token_length,
+    #                 batch_size,
+    #                 N_ITERATIONS,
+    #             )
