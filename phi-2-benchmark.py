@@ -113,7 +113,7 @@ def run_benchmark(
             time_tokenizer_loading,
             time_tokenization,
             time_generation,
-        ) = run_model(model_name, batch_prompt)
+        ) = run_model(model_name, batch_prompt, input_token_length, output_token_length)
         time_model_loading_list.append(time_model_loading)
         time_tokenizer_loading_list.append(time_tokenizer_loading)
         time_tokenization_list.append(time_tokenization)
