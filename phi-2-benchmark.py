@@ -207,7 +207,7 @@ if __name__ == "__main__":
     )
 
     # Warm up
-    run_model(MODEL_NAME, ["Get Ready"], 8, 1)
+    run_model(MODEL_NAME, ["Get Ready"], 2, 1)
 
     # Run benchmarks
     for input_token_length in INPUT_TOKEN_LENGTH_LIST:
