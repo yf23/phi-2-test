@@ -104,9 +104,6 @@ def run_benchmark(
     # Make batch
     batch_prompt = [prompt for _ in range(batch_size)]
 
-    # Warm up
-    run_model(model_name, batch_prompt[0:1], 8, 1)
-
     # Start benchmarking
     for _ in range(n_iter):
         if verbose_run:
@@ -208,6 +205,9 @@ if __name__ == "__main__":
         result_csv_filepath,
         append=False,
     )
+
+    # Warm up
+    run_model(MODEL_NAME, ["Get Ready"], 8, 1)
 
     # Run benchmarks
     for input_token_length in INPUT_TOKEN_LENGTH_LIST:
