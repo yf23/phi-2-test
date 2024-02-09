@@ -1,3 +1,4 @@
+import gc
 import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -52,6 +53,10 @@ def run_model_benchmark(model_name, batch_prompt):
     # Clean up memory
     del model
     del tokenizer
+    del input_tokens
+    del outputs
+    time.sleep(10)
+    gc.collect()
     torch.cuda.empty_cache()
 
     return time_model_loading, time_tokenizer_loading, time_tokenizing, time_generation
