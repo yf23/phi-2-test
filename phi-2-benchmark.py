@@ -49,6 +49,11 @@ def run_model_benchmark(model_name, batch_prompt):
     time_end_generation = time.time()
     time_generation = time_end_generation - time_start_generation
 
+    # Clean up memory
+    del model
+    del tokenizer
+    torch.cuda.empty_cache()
+
     return time_model_loading, time_tokenizer_loading, time_tokenizing, time_generation
 
 
