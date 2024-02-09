@@ -1,17 +1,23 @@
 import gc
+import re
 import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import logging
 
-logging.getLogger("transformers").setLevel(logging.ERROR)
-logging.getLogger("torch").setLevel(logging.ERROR)
 
 MODEL_NAME = "microsoft/phi-2"
 INPUT_TOKEN_LENGTH = 2048
 OUTPUT_TOKEN_LENGTH = 128
 BATCH_SIZE = 32
 N_ITERATIONS = 10
+
+
+def set_global_logging_level(level=logging.ERROR, prefices=[""]):
+    prefix_re = re.compile(rf'^(?:{ "|".join(prefices) })')
+    for name in logging.root.manager.loggerDict:
+        if re.match(prefix_re, name):
+            logging.getLogger(name).setLevel(level)
 
 
 def run_model_benchmark(model_name, batch_prompt):
@@ -67,6 +73,7 @@ def run_model_benchmark(model_name, batch_prompt):
 
 
 if __name__ == "__main__":
+    set_global_logging_level(logging.ERROR, ["transformers", "nlp", "torch", "tensorflow", "tensorboard", "wandb"])
     torch.set_default_device("cuda")
 
     # Benchmark time placeholder
@@ -93,9 +100,12 @@ if __name__ == "__main__":
         print(f"ITERATION: {_+1}/{N_ITERATIONS}")
 
         # Run benchmark
-        time_model_loading, time_tokenizer_loading, time_tokenization, time_generation = (
-            run_model_benchmark(MODEL_NAME, batch_prompt)
-        )
+        (
+            time_model_loading,
+            time_tokenizer_loading,
+            time_tokenization,
+            time_generation,
+        ) = run_model_benchmark(MODEL_NAME, batch_prompt)
         time_model_loading_list.append(time_model_loading)
         time_tokenizer_loading_list.append(time_tokenizer_loading)
         time_tokenization_list.append(time_tokenization)
@@ -129,7 +139,9 @@ if __name__ == "__main__":
     print("\n\nSUMMARY BENCHMARK RESULTS")
     print(f"\tEnd to end time: {sum(time_e2e_list)/N_ITERATIONS}")
     print(f"\t\tModel loading time: {sum(time_model_loading_list)/N_ITERATIONS}")
-    print(f"\t\tTokenizer loading time: {sum(time_tokenizer_loading_list)/N_ITERATIONS}")
+    print(
+        f"\t\tTokenizer loading time: {sum(time_tokenizer_loading_list)/N_ITERATIONS}"
+    )
     print(f"\t\tTokenization time: {sum(time_tokenization_list)/N_ITERATIONS}")
     print(f"\t\tGeneration time: {sum(time_generation_list)/N_ITERATIONS}")
     print(f"\tThroughput (e2e): {sum(throughput_e2e_list)/N_ITERATIONS}")
