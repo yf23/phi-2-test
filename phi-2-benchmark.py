@@ -2,8 +2,8 @@ import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-INPUT_TOKEN_LENGTH = 2048
-OUTPUT_TOKEN_LENGTH = 1024
+INPUT_TOKEN_LENGTH = 1024
+OUTPUT_TOKEN_LENGTH = 256
 BATCH_SIZE = 64
 N_ITERATIONS = 100
 
