@@ -65,8 +65,8 @@ for _ in range(N_ITERATIONS):
 
 
 # Print benchmark results
-print(f"Average time tokenizing: {sum(time_tokenizing_list) / N_ITERATIONS}s")
-print(f"Average time generating: {sum(time_generation_list) / N_ITERATIONS}s")
-print(f"Average generation throughput: {sum(generation_throughput_list) / N_ITERATIONS} tokens/s")
+print(f"Average total latency: {(sum(time_tokenizing_list) + sum(time_generation_list)) / N_ITERATIONS}s")
+print(f"Average tokenization latency: {sum(time_tokenizing_list) / N_ITERATIONS}s")
+print(f"Average generation latency: {sum(time_generation_list) / N_ITERATIONS}s")
 print(f"Average total throughput: {sum(total_throughput_list) / N_ITERATIONS} tokens/s")
-
+print(f"Average generation throughput: {sum(generation_throughput_list) / N_ITERATIONS} tokens/s")
