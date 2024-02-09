@@ -62,66 +62,71 @@ def run_model_benchmark(model_name, batch_prompt):
     return time_model_loading, time_tokenizer_loading, time_tokenizing, time_generation
 
 
-# Benchmark time placeholder
-time_model_loading_list = []
-time_tokenizer_loading_list = []
-time_tokenization_list = []
-time_generation_list = []
-time_e2e_list = []
-throughput_e2e_list = []
-throughput_generation_list = []
+if __name__ == "__main__":
+    torch.set_default_device("cuda")
 
-# User input question
-text = "Briefly summarize about the difference between NC and NCC H100 v5 VMs."
-prompt = " ".join([text for _ in range(300)])
+    # Benchmark time placeholder
+    time_model_loading_list = []
+    time_tokenizer_loading_list = []
+    time_tokenization_list = []
+    time_generation_list = []
+    time_e2e_list = []
+    throughput_e2e_list = []
+    throughput_generation_list = []
 
-# Make batch
-batch_prompt = [prompt for _ in range(BATCH_SIZE)]
+    # User input question
+    text = "Briefly summarize about the difference between NC and NCC H100 v5 VMs."
+    prompt = " ".join([text for _ in range(300)])
 
-# Warm up
-run_model_benchmark(MODEL_NAME, batch_prompt)
+    # Make batch
+    batch_prompt = [prompt for _ in range(BATCH_SIZE)]
 
-# Start benchmarking
-torch.set_default_device("cuda")
-for _ in range(N_ITERATIONS):
-    print(f"ITERATION: {_+1}/{N_ITERATIONS}")
+    # Warm up
+    run_model_benchmark(MODEL_NAME, batch_prompt)
 
-    # Run benchmark
-    time_model_loading, time_tokenizer_loading, time_tokenization, time_generation = (
-        run_model_benchmark(MODEL_NAME, batch_prompt)
-    )
-    time_model_loading_list.append(time_model_loading)
-    time_tokenizer_loading_list.append(time_tokenizer_loading)
-    time_tokenization_list.append(time_tokenization)
-    time_generation_list.append(time_generation)
+    # Start benchmarking
+    for _ in range(N_ITERATIONS):
+        print(f"ITERATION: {_+1}/{N_ITERATIONS}")
 
-    # Calculate end to end time
-    time_e2e = (
-        time_model_loading + time_tokenizer_loading + time_tokenization + time_generation
-    )
-    time_e2e_list.append(time_e2e)
+        # Run benchmark
+        time_model_loading, time_tokenizer_loading, time_tokenization, time_generation = (
+            run_model_benchmark(MODEL_NAME, batch_prompt)
+        )
+        time_model_loading_list.append(time_model_loading)
+        time_tokenizer_loading_list.append(time_tokenizer_loading)
+        time_tokenization_list.append(time_tokenization)
+        time_generation_list.append(time_generation)
 
-    # Calculate throughput
-    throughput_generation = BATCH_SIZE * OUTPUT_TOKEN_LENGTH / time_generation
-    throughput_generation_list.append(throughput_generation)
-    throughput_e2e = BATCH_SIZE * OUTPUT_TOKEN_LENGTH / time_e2e
-    throughput_e2e_list.append(throughput_e2e)
+        # Calculate end to end time
+        time_e2e = (
+            time_model_loading
+            + time_tokenizer_loading
+            + time_tokenization
+            + time_generation
+        )
+        time_e2e_list.append(time_e2e)
 
-    # Report
-    print(f"\tEnd to end time: {time_e2e}")
-    print(f"\t\tModel loading time: {time_model_loading}")
-    print(f"\t\tTokenizer loading time: {time_tokenizer_loading}")
-    print(f"\t\tTokenization time: {time_tokenization}")
-    print(f"\t\tGeneration time: {time_generation}")
-    print(f"\tThroughput (e2e): {throughput_e2e}")
-    print(f"\tThroughput (generation): {throughput_generation}")
+        # Calculate throughput
+        throughput_generation = BATCH_SIZE * OUTPUT_TOKEN_LENGTH / time_generation
+        throughput_generation_list.append(throughput_generation)
+        throughput_e2e = BATCH_SIZE * OUTPUT_TOKEN_LENGTH / time_e2e
+        throughput_e2e_list.append(throughput_e2e)
 
-# Print summary benchmark results
-print("\n\nSUMMARY BENCHMARK RESULTS")
-print(f"\tEnd to end time: {sum(time_e2e_list)/N_ITERATIONS}")
-print(f"\t\tModel loading time: {sum(time_model_loading_list)/N_ITERATIONS}")
-print(f"\t\tTokenizer loading time: {sum(time_tokenizer_loading_list)/N_ITERATIONS}")
-print(f"\t\tTokenization time: {sum(time_tokenization_list)/N_ITERATIONS}")
-print(f"\t\tGeneration time: {sum(time_generation_list)/N_ITERATIONS}")
-print(f"\tThroughput (e2e): {sum(throughput_e2e_list)/N_ITERATIONS}")
-print(f"\tThroughput (generation): {sum(throughput_generation_list)/N_ITERATIONS}")
+        # Report
+        print(f"\tEnd to end time: {time_e2e}")
+        print(f"\t\tModel loading time: {time_model_loading}")
+        print(f"\t\tTokenizer loading time: {time_tokenizer_loading}")
+        print(f"\t\tTokenization time: {time_tokenization}")
+        print(f"\t\tGeneration time: {time_generation}")
+        print(f"\tThroughput (e2e): {throughput_e2e}")
+        print(f"\tThroughput (generation): {throughput_generation}")
+
+    # Print summary benchmark results
+    print("\n\nSUMMARY BENCHMARK RESULTS")
+    print(f"\tEnd to end time: {sum(time_e2e_list)/N_ITERATIONS}")
+    print(f"\t\tModel loading time: {sum(time_model_loading_list)/N_ITERATIONS}")
+    print(f"\t\tTokenizer loading time: {sum(time_tokenizer_loading_list)/N_ITERATIONS}")
+    print(f"\t\tTokenization time: {sum(time_tokenization_list)/N_ITERATIONS}")
+    print(f"\t\tGeneration time: {sum(time_generation_list)/N_ITERATIONS}")
+    print(f"\tThroughput (e2e): {sum(throughput_e2e_list)/N_ITERATIONS}")
+    print(f"\tThroughput (generation): {sum(throughput_generation_list)/N_ITERATIONS}")
