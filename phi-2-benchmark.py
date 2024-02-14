@@ -112,7 +112,8 @@ def run_model(model_name, batch_prompt, input_token_length, output_token_length)
     throughput = streamer.throughput()
 
     time_start_tokenizing = time.perf_counter()
-    tokenizer.decode(outputs)
+    for output in outputs:
+        tokenizer.decode(output)
     time_end_tokenizing = time.perf_counter()
     time_tokenizing += time_end_tokenizing - time_start_tokenizing
 
