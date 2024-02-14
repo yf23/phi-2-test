@@ -22,8 +22,8 @@ N_ITERATIONS = 5
 
 class ThroughputStreamer(BaseStreamer):
     def __init__(self):
-        self.start_time = -1
-        self.end_time = -1
+        self.first_token_time = -1
+        self.last_token_time = -1
         self.skip_prompt = True
         self.n_tokens = 0
         self.tot_latency = -1
@@ -35,26 +35,26 @@ class ThroughputStreamer(BaseStreamer):
             self.skip_prompt = False
             return
 
-        if self.start_time == -1:
-            self.start_time = time.perf_counter()
+        if self.first_token_time == -1:
+            self.first_token_time = time.perf_counter()
 
         self.n_tokens += len(value.flatten())
 
     def end(self):
-        self.end_time = time.perf_counter()
+        self.last_token_time = time.perf_counter()
 
-    def generation_time(self):
-        return self.end_time - self.start_time
+    def generation_latency(self):
+        return self.last_token_time - self.first_token_time
 
-    def set_latencies(self, start_time, end_time):
-        self.ftl = self.start_time - start_time
-        self.tot_latency = end_time - start_time
+    def set_latencies(self, pre_generate_start_time, post_generate_end_time):
+        self.ftl = self.first_token_time - pre_generate_start_time
+        self.tot_latency = post_generate_end_time - pre_generate_start_time
     
     def first_token_latency(self):
         return self.ftl
     
     def throughput(self):
-        return self.n_tokens / self.generation_time()
+        return self.n_tokens / self.generation_latency()
     
     def total_latency(self):
         return self.tot_latency
@@ -108,8 +108,13 @@ def run_model(model_name, batch_prompt, input_token_length, output_token_length)
     time_end_generation = time.perf_counter()
     streamer.set_latencies(time_start_generation, time_end_generation)
     time_first_token_latency = streamer.first_token_latency()
-    time_generation = streamer.generation_time()
+    time_generation = streamer.generation_latency()
     throughput = streamer.throughput()
+
+    time_start_tokenizing = time.perf_counter()
+    tokenizer.decode(outputs)
+    time_end_tokenizing = time.perf_counter()
+    time_tokenizing += time_end_tokenizing - time_start_tokenizing
 
     # Clean up memory
     del model
@@ -180,9 +185,7 @@ def run_benchmark(
 
         # Calculate end to end time
         time_e2e = (
-            time_model_loading
-            + time_tokenizer_loading
-            + time_tokenization
+            time_tokenization
             + time_first_token_latency
             + time_generation
         )
