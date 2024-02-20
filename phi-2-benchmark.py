@@ -264,6 +264,7 @@ if __name__ == "__main__":
         "model_loading_latency",
         "tokenizer_loading_latency",
         "tokenization_latency",
+        "tokenization_output_latency",
         "first_token_latency",
         "generation_latency",
         "total_latency",
