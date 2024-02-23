@@ -1,77 +1,30 @@
 import gc
 import time
 import torch
+import argparse
 import transformers
-from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer
-BaseStreamer = TextStreamer.__bases__[0]
+from utils import ThroughputStreamer, write_csv_file
+from configs import PERF_BENCHMARK_CONFIG_DICT, LLM_PERF_BENCHMARK_OUTPUT_CSV_COLUMNS
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
-# MODEL_NAME = "microsoft/phi-2"
-# INPUT_TOKEN_LENGTH_LIST = [32, 256, 1024, 2048]
-# OUTPUT_TOKEN_LENGTH_LIST = [1, 32, 64, 128]
-# BATCH_SIZE_LIST = [1, 8, 32]
-# N_ITERATIONS = 5
-
-
-MODEL_NAME = "openai-community/gpt2-xl"
-INPUT_TOKEN_LENGTH_LIST = [32, 256, 512]
-OUTPUT_TOKEN_LENGTH_LIST = [1, 32, 64, 256]
-BATCH_SIZE_LIST = [1, 8, 32, 64]
-N_ITERATIONS = 5
-
-
-class ThroughputStreamer(BaseStreamer):
-    def __init__(self):
-        self.first_token_time = -1
-        self.last_token_time = -1
-        self.skip_prompt = True
-        self.n_tokens = 0
-        self.tot_latency = -1
-        self.ftl = -1
-
-    def put(self, value):
-        # Prompt tokens sent first, ignore
-        if self.skip_prompt:
-            self.skip_prompt = False
-            return
-
-        if self.first_token_time == -1:
-            self.first_token_time = time.perf_counter()
-
-        self.n_tokens += len(value.flatten())
-
-    def end(self):
-        self.last_token_time = time.perf_counter()
-
-    def generation_latency(self):
-        return self.last_token_time - self.first_token_time
-
-    def set_latencies(self, pre_generate_start_time, post_generate_end_time):
-        self.ftl = self.first_token_time - pre_generate_start_time
-        self.tot_latency = post_generate_end_time - pre_generate_start_time
-    
-    def first_token_latency(self):
-        return self.ftl
-    
-    def throughput(self):
-        return self.n_tokens / self.generation_latency()
-    
-    def total_latency(self):
-        return self.tot_latency
-
-
-def write_csv_file(line, filepath, append=True):
-    mode = "a" if append else "w"
-    with open(filepath, mode) as f:
-        f.write(line + "\n")
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run LLM performance benchmark")
+    parser.add_argument(
+        "-s",
+        "--test-scenario",
+        type=str,
+        default="phi-2",
+        choices=PERF_BENCHMARK_CONFIG_DICT.keys(),
+        help="Test scenario to run",
+    )
+    return parser.parse_args()
 
 
 def run_model(model_name, batch_prompt, input_token_length, output_token_length):
     # Load the model
     time_start_model_loading = time.perf_counter()
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype="auto", trust_remote_code=True
-    )
+    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto", trust_remote_code=True)
     time_end_model_loading = time.perf_counter()
     time_model_loading = time_end_model_loading - time_start_model_loading
 
@@ -103,7 +56,7 @@ def run_model(model_name, batch_prompt, input_token_length, output_token_length)
         pad_token_id=tokenizer.pad_token_id,
         min_new_tokens=output_token_length,
         max_new_tokens=output_token_length,
-        streamer=streamer
+        streamer=streamer,
     )
     time_end_generation = time.perf_counter()
     streamer.set_latencies(time_start_generation, time_end_generation)
@@ -111,11 +64,10 @@ def run_model(model_name, batch_prompt, input_token_length, output_token_length)
     time_generation = streamer.generation_latency()
     throughput = streamer.throughput()
 
-    time_start_tokenizing_output = time.perf_counter()
-    for output in outputs:
-        tokenizer.decode(output)
-    time_end_tokenizing_output = time.perf_counter()
-    time_tokenizing_output = time_end_tokenizing_output - time_start_tokenizing_output
+    time_start_output_decoding = time.perf_counter()
+    tokenizer.batch_decode(outputs)
+    time_end_output_decoding = time.perf_counter()
+    time_output_decoding = time_end_output_decoding - time_start_output_decoding
 
     # Clean up memory
     del model
@@ -126,7 +78,15 @@ def run_model(model_name, batch_prompt, input_token_length, output_token_length)
     gc.collect()
     torch.cuda.empty_cache()
 
-    return time_model_loading, time_tokenizer_loading, time_tokenizing, time_tokenizing_output, time_first_token_latency, time_generation, throughput
+    return (
+        time_model_loading,
+        time_tokenizer_loading,
+        time_tokenizing,
+        time_output_decoding,
+        time_first_token_latency,
+        time_generation,
+        throughput,
+    )
 
 
 def run_benchmark(
@@ -149,7 +109,7 @@ def run_benchmark(
     time_model_loading_list = []
     time_tokenizer_loading_list = []
     time_tokenization_list = []
-    time_tokenization_output_list = []
+    time_output_decoding_list = []
     time_first_token_latency_list = []
     time_generation_list = []
     time_e2e_list = []
@@ -175,25 +135,20 @@ def run_benchmark(
             time_model_loading,
             time_tokenizer_loading,
             time_tokenization,
-            time_tokenization_output,
+            time_output_decoding,
             time_first_token_latency,
             time_generation,
-            throughput_generation
+            throughput_generation,
         ) = run_model(model_name, batch_prompt, input_token_length, output_token_length)
         time_model_loading_list.append(time_model_loading)
         time_tokenizer_loading_list.append(time_tokenizer_loading)
         time_tokenization_list.append(time_tokenization)
-        time_tokenization_output_list.append(time_tokenization_output)
+        time_output_decoding_list.append(time_output_decoding)
         time_first_token_latency_list.append(time_first_token_latency)
         time_generation_list.append(time_generation)
 
         # Calculate end to end time
-        time_e2e = (
-            time_tokenization
-            + time_first_token_latency
-            + time_generation
-            + time_tokenization_output
-        )
+        time_e2e = time_tokenization + time_first_token_latency + time_generation + time_output_decoding
         time_e2e_list.append(time_e2e)
 
         throughput_generation_list.append(throughput_generation)
@@ -206,7 +161,7 @@ def run_benchmark(
             print(f"\t\tModel loading time: {time_model_loading} seconds")
             print(f"\t\tTokenizer loading time: {time_tokenizer_loading} seconds")
             print(f"\t\tTokenization time: {time_tokenization} seconds")
-            print(f"\t\tOutput tokenization time: {time_tokenization_output} seconds")
+            print(f"\t\tOutput decoding time: {time_output_decoding} seconds")
             print(f"\t\tFirst token latency: {time_first_token_latency} seconds")
             print(f"\t\tGeneration time: {time_generation} seconds")
             print(f"\tThroughput (e2e): {throughput_e2e} tokens/second")
@@ -217,7 +172,7 @@ def run_benchmark(
     time_model_loading_avg = sum(time_model_loading_list) / n_iter
     time_tokenizer_loading_avg = sum(time_tokenizer_loading_list) / n_iter
     time_tokenization_avg = sum(time_tokenization_list) / n_iter
-    time_tokenization_output_avg = sum(time_tokenization_output_list) / n_iter
+    time_output_decoding_avg = sum(time_output_decoding_list) / n_iter
     time_first_token_latency_avg = sum(time_first_token_latency_list) / n_iter
     time_generation_avg = sum(time_generation_list) / n_iter
     throughput_e2e_avg = sum(throughput_e2e_list) / n_iter
@@ -231,7 +186,7 @@ def run_benchmark(
         print(f"\t\tModel loading time: {time_model_loading_avg} seconds")
         print(f"\t\tTokenizer loading time: {time_tokenizer_loading_avg} seconds")
         print(f"\t\tTokenization time: {time_tokenization_avg} seconds")
-        print(f"\t\tOutput tokenization time: {time_tokenization_output_avg} seconds")
+        print(f"\t\tOutput decoding time: {time_output_decoding_avg} seconds")
         print(f"\t\tFirst token latency: {time_first_token_latency_avg} seconds")
         print(f"\t\tGeneration time: {time_generation_avg} seconds")
         print(f"\tThroughput (e2e): {throughput_e2e_avg} tokens/second")
@@ -242,7 +197,7 @@ def run_benchmark(
         time_model_loading_avg,
         time_tokenizer_loading_avg,
         time_tokenization_avg,
-        time_tokenization_output_avg,
+        time_output_decoding_avg,
         time_first_token_latency_avg,
         time_generation_avg,
         time_e2e_avg,
@@ -251,50 +206,44 @@ def run_benchmark(
     )
 
 
-if __name__ == "__main__":
-    torch.set_default_device("cuda")
-    transformers.logging.set_verbosity_error()
-
+def run_all_benchmark(test_scenario):
     # Write header to CSV
-    columns = [
-        "model_name",
-        "input_token_length",
-        "output_token_length",
-        "batch_size",
-        "model_loading_latency",
-        "tokenizer_loading_latency",
-        "tokenization_latency",
-        "tokenization_output_latency",
-        "first_token_latency",
-        "generation_latency",
-        "total_latency",
-        "throughput_e2e",
-        "throughput_generation",
-    ]
-    result_csv_filepath = (
-        f'{MODEL_NAME.split("/")[-1]}_perf_data_{time.strftime("%Y%m%d%H%M%S")}.csv'
-    )
+    result_csv_filepath = f'{test_scenario.split("/")[-1]}_perf_data_{time.strftime("%Y%m%d%H%M%S")}.csv'
     write_csv_file(
-        ",".join(columns),
+        ",".join(LLM_PERF_BENCHMARK_OUTPUT_CSV_COLUMNS),
         result_csv_filepath,
         append=False,
     )
 
+    # Read config
+    model_name = PERF_BENCHMARK_CONFIG_DICT[test_scenario]["model_name"]
+    input_token_length_list = PERF_BENCHMARK_CONFIG_DICT[test_scenario]["input_token_length"]
+    output_token_length_list = PERF_BENCHMARK_CONFIG_DICT[test_scenario]["output_token_length"]
+    batch_size_list = PERF_BENCHMARK_CONFIG_DICT[test_scenario]["batch_size"]
+    n_iterations = PERF_BENCHMARK_CONFIG_DICT[test_scenario]["n_iterations"]
+
     # Warm up
-    run_model(MODEL_NAME, ["Get Ready"], 2, 1)
+    run_model(model_name, ["Get Ready"], 2, 1)
 
     # Run benchmarks
-    for input_token_length in INPUT_TOKEN_LENGTH_LIST:
-        for output_token_length in OUTPUT_TOKEN_LENGTH_LIST:
-            for batch_size in BATCH_SIZE_LIST:
+    for input_token_length in input_token_length_list:
+        for output_token_length in output_token_length_list:
+            for batch_size in batch_size_list:
                 results = run_benchmark(
-                    MODEL_NAME,
+                    model_name,
                     input_token_length,
                     output_token_length,
                     batch_size,
-                    N_ITERATIONS,
+                    n_iterations,
                 )
                 write_csv_file(
-                    f"{MODEL_NAME},{input_token_length},{output_token_length},{batch_size},{','.join(map(str, results))}",
+                    f"{model_name},{input_token_length},{output_token_length},{batch_size},{','.join(map(str, results))}",
                     result_csv_filepath,
                 )
+
+
+if __name__ == "__main__":
+    torch.set_default_device("cuda")
+    transformers.logging.set_verbosity_error()
+    args = parse_args()
+    run_all_benchmark(args.test_scenario)
