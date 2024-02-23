@@ -4,7 +4,7 @@ import torch
 import argparse
 import transformers
 from utils import ThroughputStreamer, write_csv_file
-from configs import PERF_BENCHMARK_CONFIG_DICT, LLM_PERF_BENCHMARK_OUTPUT_CSV_COLUMNS
+from configs import LLM_PERF_BENCHMARK_CONFIG_DICT, LLM_PERF_BENCHMARK_OUTPUT_CSV_COLUMNS
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
@@ -15,7 +15,7 @@ def parse_args():
         "--test-scenario",
         type=str,
         default="phi-2",
-        choices=PERF_BENCHMARK_CONFIG_DICT.keys(),
+        choices=LLM_PERF_BENCHMARK_CONFIG_DICT.keys(),
         help="Test scenario to run",
     )
     return parser.parse_args()
@@ -216,11 +216,11 @@ def run_all_benchmark(test_scenario):
     )
 
     # Read config
-    model_name = PERF_BENCHMARK_CONFIG_DICT[test_scenario]["model_name"]
-    input_token_length_list = PERF_BENCHMARK_CONFIG_DICT[test_scenario]["input_token_length"]
-    output_token_length_list = PERF_BENCHMARK_CONFIG_DICT[test_scenario]["output_token_length"]
-    batch_size_list = PERF_BENCHMARK_CONFIG_DICT[test_scenario]["batch_size"]
-    n_iterations = PERF_BENCHMARK_CONFIG_DICT[test_scenario]["n_iterations"]
+    model_name = LLM_PERF_BENCHMARK_CONFIG_DICT[test_scenario]["model_name"]
+    input_token_length_list = LLM_PERF_BENCHMARK_CONFIG_DICT[test_scenario]["input_token_length"]
+    output_token_length_list = LLM_PERF_BENCHMARK_CONFIG_DICT[test_scenario]["output_token_length"]
+    batch_size_list = LLM_PERF_BENCHMARK_CONFIG_DICT[test_scenario]["batch_size"]
+    n_iterations = LLM_PERF_BENCHMARK_CONFIG_DICT[test_scenario]["n_iterations"]
 
     # Warm up
     run_model(model_name, ["Get Ready"], 2, 1)

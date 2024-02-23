@@ -3,16 +3,27 @@ import time
 import torch
 import argparse
 import transformers
+import numpy as np
+from datasets import load_dataset
 from utils import ThroughputStreamer, write_csv_file
-from configs import PERF_BENCHMARK_CONFIG_DICT, LLM_PERF_BENCHMARK_OUTPUT_CSV_COLUMNS
+from configs import (
+    WHISPER_PERF_BENCHMARK_CONFIG_DICT,
+    WHISPER_PERF_BENCHMARK_OUTPUT_CSV_COLUMNS,
+)
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 
 
-MODEL_NAME = "openai/whisper-large-v3"
-# INPUT_TOKEN_LENGTH_LIST = [32, 256, 512]
-OUTPUT_TOKEN_LENGTH_LIST = [1, 32, 64, 256]
-BATCH_SIZE_LIST = [1, 8, 32, 64]
-N_ITERATIONS = 5
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run Whisper performance benchmark")
+    parser.add_argument(
+        "-s",
+        "--test-scenario",
+        type=str,
+        default="whisper-large-v3-test",
+        choices=WHISPER_PERF_BENCHMARK_CONFIG_DICT.keys(),
+        help="Test scenario to run",
+    )
+    return parser.parse_args()
 
 
 def run_model(
@@ -63,10 +74,10 @@ def run_model(
     throughput = streamer.throughput()
 
     # Decode output
-    time_start_decoding = time.perf_counter()
-    processor.batch_decode(outputs, skip_special_tokens=True)
-    time_end_decoding = time.perf_counter()
-    time_decoding = time_end_decoding - time_start_decoding
+    time_start_output_decoding = time.perf_counter()
+    processor.batch_decode(outputs)
+    time_end_output_decoding = time.perf_counter()
+    time_output_decoding = time_end_output_decoding - time_start_output_decoding
 
     # Clean up memory
     del model
@@ -81,47 +92,54 @@ def run_model(
         time_model_loading,
         time_processor_loading,
         time_processing,
+        time_output_decoding,
         time_first_token_latency,
         time_generation,
         throughput,
-        time_decoding,
     )
 
 
 def run_benchmark(
     model_name,
-    input_token_length,
     output_token_length,
     batch_size,
     n_iter,
-    input_text="",
     verbose_run=False,
     verbose_summary=True,
 ):
     # Print parameters in one line
     if verbose_summary:
         print(
-            f"{model_name}: input_len={input_token_length}, output_len={output_token_length}, batch_size={batch_size}"
+            f"{model_name}: output_len={output_token_length}, batch_size={batch_size}"
         )
 
     # Benchmark time placeholder
     time_model_loading_list = []
-    time_tokenizer_loading_list = []
-    time_tokenization_list = []
+    time_processor_loading_list = []
+    time_input_processing_list = []
+    time_output_decoding_list = []
     time_first_token_latency_list = []
     time_generation_list = []
     time_e2e_list = []
     throughput_e2e_list = []
     throughput_generation_list = []
 
-    # Input text
-    text = "Briefly summarize about the difference between NC and NCC H100 v5 VMs."
-    if input_text:
-        text = input_text
-    prompt = " ".join([text for _ in range(500)])
+    # Input waveform
+    ds = load_dataset(
+        "hf-internal-testing/librispeech_asr_dummy",
+        "clean",
+        split="validation",
+        trust_remote_code=True,
+    )
+    audio_sample = ds[0]["audio"]
+    waveform = audio_sample["array"]
+    sampling_rate = audio_sample["sampling_rate"]
 
     # Make batch
-    batch_prompt = [prompt for _ in range(batch_size)]
+    batch_waveform = [
+        waveform + np.random.normal(0, np.std(waveform) * 2, len(waveform))
+        for _ in range(batch_size)
+    ]
 
     # Start benchmarking
     for _ in range(n_iter):
@@ -131,21 +149,22 @@ def run_benchmark(
         # Run benchmark
         (
             time_model_loading,
-            time_tokenizer_loading,
-            time_tokenization,
+            time_processor_loading,
+            time_input_processing,
+            time_output_decoding,
             time_first_token_latency,
             time_generation,
             throughput_generation,
-            time_decoding,
-        ) = run_model(model_name, batch_prompt, input_token_length, output_token_length)
+        ) = run_model(model_name, batch_waveform, sampling_rate, output_token_length)
         time_model_loading_list.append(time_model_loading)
-        time_tokenizer_loading_list.append(time_tokenizer_loading)
-        time_tokenization_list.append(time_tokenization)
+        time_processor_loading_list.append(time_processor_loading)
+        time_input_processing_list.append(time_input_processing)
+        time_output_decoding_list.append(time_output_decoding)
         time_first_token_latency_list.append(time_first_token_latency)
         time_generation_list.append(time_generation)
 
         # Calculate end to end time
-        time_e2e = time_tokenization + time_first_token_latency + time_generation
+        time_e2e = time_input_processing + time_first_token_latency + time_generation
         time_e2e_list.append(time_e2e)
 
         throughput_generation_list.append(throughput_generation)
@@ -156,8 +175,9 @@ def run_benchmark(
         if verbose_run:
             print(f"\tEnd to end time: {time_e2e}")
             print(f"\t\tModel loading time: {time_model_loading} seconds")
-            print(f"\t\tTokenizer loading time: {time_tokenizer_loading} seconds")
-            print(f"\t\tTokenization time: {time_tokenization} seconds")
+            print(f"\t\tProcessor loading time: {time_processor_loading} seconds")
+            print(f"\t\tInput Processing time: {time_input_processing} seconds")
+            print(f"\t\tOutput decoding time: {time_output_decoding} seconds")
             print(f"\t\tFirst token latency: {time_first_token_latency} seconds")
             print(f"\t\tGeneration time: {time_generation} seconds")
             print(f"\tThroughput (e2e): {throughput_e2e} tokens/second")
@@ -166,8 +186,9 @@ def run_benchmark(
     # Calculate average
     time_e2e_avg = sum(time_e2e_list) / n_iter
     time_model_loading_avg = sum(time_model_loading_list) / n_iter
-    time_tokenizer_loading_avg = sum(time_tokenizer_loading_list) / n_iter
-    time_tokenization_avg = sum(time_tokenization_list) / n_iter
+    time_processor_loading_avg = sum(time_processor_loading_list) / n_iter
+    time_input_processing_avg = sum(time_input_processing_list) / n_iter
+    time_output_decoding_avg = sum(time_output_decoding_list) / n_iter
     time_first_token_latency_avg = sum(time_first_token_latency_list) / n_iter
     time_generation_avg = sum(time_generation_list) / n_iter
     throughput_e2e_avg = sum(throughput_e2e_list) / n_iter
@@ -179,8 +200,9 @@ def run_benchmark(
             print("\n\nSUMMARY BENCHMARK RESULTS")
         print(f"\tEnd to end time: {time_e2e_avg} seconds")
         print(f"\t\tModel loading time: {time_model_loading_avg} seconds")
-        print(f"\t\tTokenizer loading time: {time_tokenizer_loading_avg} seconds")
-        print(f"\t\tTokenization time: {time_tokenization_avg} seconds")
+        print(f"\t\tProcessor loading time: {time_processor_loading_avg} seconds")
+        print(f"\t\tInput Processing time: {time_input_processing_avg} seconds")
+        print(f"\t\tOutput decoding time: {time_output_decoding_avg} seconds")
         print(f"\t\tFirst token latency: {time_first_token_latency_avg} seconds")
         print(f"\t\tGeneration time: {time_generation_avg} seconds")
         print(f"\tThroughput (e2e): {throughput_e2e_avg} tokens/second")
@@ -189,8 +211,9 @@ def run_benchmark(
 
     return (
         time_model_loading_avg,
-        time_tokenizer_loading_avg,
-        time_tokenization_avg,
+        time_processor_loading_avg,
+        time_input_processing_avg,
+        time_output_decoding_avg,
         time_first_token_latency_avg,
         time_generation_avg,
         time_e2e_avg,
@@ -199,48 +222,45 @@ def run_benchmark(
     )
 
 
-if __name__ == "__main__":
-    transformers.logging.set_verbosity_error()
-
+def run_all_benchmark(test_scenario):
     # Write header to CSV
-    columns = [
-        "model_name",
-        "input_token_length",
-        "output_token_length",
-        "batch_size",
-        "model_loading_latency",
-        "tokenizer_loading_latency",
-        "tokenization_latency",
-        "first_token_latency",
-        "generation_latency",
-        "total_latency",
-        "throughput_e2e",
-        "throughput_generation",
-    ]
     result_csv_filepath = (
-        f'{MODEL_NAME.split("/")[-1]}_perf_data_{time.strftime("%Y%m%d%H%M%S")}.csv'
+        f'{test_scenario.split("/")[-1]}_perf_data_{time.strftime("%Y%m%d%H%M%S")}.csv'
     )
     write_csv_file(
-        ",".join(columns),
+        ",".join(WHISPER_PERF_BENCHMARK_OUTPUT_CSV_COLUMNS),
         result_csv_filepath,
         append=False,
     )
 
+    # Read config
+    model_name = WHISPER_PERF_BENCHMARK_CONFIG_DICT[test_scenario]["model_name"]
+    output_token_length_list = WHISPER_PERF_BENCHMARK_CONFIG_DICT[test_scenario][
+        "output_token_length"
+    ]
+    batch_size_list = WHISPER_PERF_BENCHMARK_CONFIG_DICT[test_scenario]["batch_size"]
+    n_iterations = WHISPER_PERF_BENCHMARK_CONFIG_DICT[test_scenario]["n_iterations"]
+
     # Warm up
-    run_model(MODEL_NAME, ["Get Ready"], 2, 1)
+    run_model(model_name, np.random.normal(0, 0.5, 93680), 16000, 8)
 
     # Run benchmarks
-    for input_token_length in INPUT_TOKEN_LENGTH_LIST:
-        for output_token_length in OUTPUT_TOKEN_LENGTH_LIST:
-            for batch_size in BATCH_SIZE_LIST:
-                results = run_benchmark(
-                    MODEL_NAME,
-                    input_token_length,
-                    output_token_length,
-                    batch_size,
-                    N_ITERATIONS,
-                )
-                write_csv_file(
-                    f"{MODEL_NAME},{input_token_length},{output_token_length},{batch_size},{','.join(map(str, results))}",
-                    result_csv_filepath,
-                )
+    for output_token_length in output_token_length_list:
+        for batch_size in batch_size_list:
+            results = run_benchmark(
+                model_name,
+                output_token_length,
+                batch_size,
+                n_iterations,
+            )
+            write_csv_file(
+                f"{model_name},{output_token_length},{batch_size},{','.join(map(str, results))}",
+                result_csv_filepath,
+            )
+
+
+if __name__ == "__main__":
+    torch.set_default_device("cuda")
+    transformers.logging.set_verbosity_error()
+    args = parse_args()
+    run_all_benchmark(args.test_scenario)
