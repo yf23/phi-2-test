@@ -242,7 +242,7 @@ def run_all_benchmark(test_scenario):
     n_iterations = WHISPER_PERF_BENCHMARK_CONFIG_DICT[test_scenario]["n_iterations"]
 
     # Warm up
-    run_model(model_name, np.random.normal(0, 0.5, 93680), 16000, 8)
+    # run_model(model_name, np.random.normal(0, 0.5, 93680), 16000, 8)
 
     # Run benchmarks
     for output_token_length in output_token_length_list:
