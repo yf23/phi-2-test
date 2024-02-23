@@ -64,11 +64,10 @@ def run_model(model_name, batch_prompt, input_token_length, output_token_length)
     time_generation = streamer.generation_latency()
     throughput = streamer.throughput()
 
-    time_start_tokenizing_output = time.perf_counter()
-    for output in outputs:
-        tokenizer.decode(output)
-    time_end_tokenizing_output = time.perf_counter()
-    time_tokenizing_output = time_end_tokenizing_output - time_start_tokenizing_output
+    time_start_output_decoding = time.perf_counter()
+    tokenizer.batch_decode(outputs)
+    time_end_output_decoding = time.perf_counter()
+    time_output_decoding = time_end_output_decoding - time_start_output_decoding
 
     # Clean up memory
     del model
@@ -83,7 +82,7 @@ def run_model(model_name, batch_prompt, input_token_length, output_token_length)
         time_model_loading,
         time_tokenizer_loading,
         time_tokenizing,
-        time_tokenizing_output,
+        time_output_decoding,
         time_first_token_latency,
         time_generation,
         throughput,
@@ -110,7 +109,7 @@ def run_benchmark(
     time_model_loading_list = []
     time_tokenizer_loading_list = []
     time_tokenization_list = []
-    time_tokenization_output_list = []
+    time_output_decoding_list = []
     time_first_token_latency_list = []
     time_generation_list = []
     time_e2e_list = []
@@ -136,7 +135,7 @@ def run_benchmark(
             time_model_loading,
             time_tokenizer_loading,
             time_tokenization,
-            time_tokenization_output,
+            time_output_decoding,
             time_first_token_latency,
             time_generation,
             throughput_generation,
@@ -144,12 +143,12 @@ def run_benchmark(
         time_model_loading_list.append(time_model_loading)
         time_tokenizer_loading_list.append(time_tokenizer_loading)
         time_tokenization_list.append(time_tokenization)
-        time_tokenization_output_list.append(time_tokenization_output)
+        time_output_decoding_list.append(time_output_decoding)
         time_first_token_latency_list.append(time_first_token_latency)
         time_generation_list.append(time_generation)
 
         # Calculate end to end time
-        time_e2e = time_tokenization + time_first_token_latency + time_generation + time_tokenization_output
+        time_e2e = time_tokenization + time_first_token_latency + time_generation + time_output_decoding
         time_e2e_list.append(time_e2e)
 
         throughput_generation_list.append(throughput_generation)
@@ -162,7 +161,7 @@ def run_benchmark(
             print(f"\t\tModel loading time: {time_model_loading} seconds")
             print(f"\t\tTokenizer loading time: {time_tokenizer_loading} seconds")
             print(f"\t\tTokenization time: {time_tokenization} seconds")
-            print(f"\t\tOutput tokenization time: {time_tokenization_output} seconds")
+            print(f"\t\tOutput decoding time: {time_output_decoding} seconds")
             print(f"\t\tFirst token latency: {time_first_token_latency} seconds")
             print(f"\t\tGeneration time: {time_generation} seconds")
             print(f"\tThroughput (e2e): {throughput_e2e} tokens/second")
@@ -173,7 +172,7 @@ def run_benchmark(
     time_model_loading_avg = sum(time_model_loading_list) / n_iter
     time_tokenizer_loading_avg = sum(time_tokenizer_loading_list) / n_iter
     time_tokenization_avg = sum(time_tokenization_list) / n_iter
-    time_tokenization_output_avg = sum(time_tokenization_output_list) / n_iter
+    time_output_decoding_avg = sum(time_output_decoding_list) / n_iter
     time_first_token_latency_avg = sum(time_first_token_latency_list) / n_iter
     time_generation_avg = sum(time_generation_list) / n_iter
     throughput_e2e_avg = sum(throughput_e2e_list) / n_iter
@@ -187,7 +186,7 @@ def run_benchmark(
         print(f"\t\tModel loading time: {time_model_loading_avg} seconds")
         print(f"\t\tTokenizer loading time: {time_tokenizer_loading_avg} seconds")
         print(f"\t\tTokenization time: {time_tokenization_avg} seconds")
-        print(f"\t\tOutput tokenization time: {time_tokenization_output_avg} seconds")
+        print(f"\t\tOutput decoding time: {time_output_decoding_avg} seconds")
         print(f"\t\tFirst token latency: {time_first_token_latency_avg} seconds")
         print(f"\t\tGeneration time: {time_generation_avg} seconds")
         print(f"\tThroughput (e2e): {throughput_e2e_avg} tokens/second")
@@ -198,7 +197,7 @@ def run_benchmark(
         time_model_loading_avg,
         time_tokenizer_loading_avg,
         time_tokenization_avg,
-        time_tokenization_output_avg,
+        time_output_decoding_avg,
         time_first_token_latency_avg,
         time_generation_avg,
         time_e2e_avg,
