@@ -1,0 +1,39 @@
+PERF_BENCHMARK_CONFIG_DICT = {
+    "phi-2": {
+        "model_name": "microsoft/phi-2",
+        "input_token_length": [32, 256, 1024, 2048],
+        "output_token_length": [32, 64, 128],
+        "batch_size": [1, 8, 32],
+        "n_iterations": 5,
+    },
+    "gpt2-xl": {
+        "model_name": "openai-community/gpt2-xl",
+        "input_token_length": [32, 256, 512],
+        "output_token_length": [32, 64, 256],
+        "batch_size": [1, 8, 32, 64],
+        "n_iterations": 5,
+    },
+    "phi-2-test": {
+        "model_name": "microsoft/phi-2",
+        "input_token_length": [16],
+        "output_token_length": [16],
+        "batch_size": [1],
+        "n_iterations": 1,
+    },
+}
+
+LLM_PERF_BENCHMARK_OUTPUT_CSV_COLUMNS = [
+    "model_name",
+    "input_token_length",
+    "output_token_length",
+    "batch_size",
+    "model_loading_latency",
+    "tokenizer_loading_latency",
+    "input_tokenization_latency",
+    "output_decoding_latency",
+    "first_token_latency",
+    "generation_latency",
+    "total_latency",
+    "throughput_e2e",
+    "throughput_generation",
+]
