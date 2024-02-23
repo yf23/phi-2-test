@@ -33,11 +33,15 @@ def run_model(
     output_token_length,
 ):
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    if model_name == "openai/whisper-large-v3" and torch.cuda.is_available():
+        torch_dtype = torch.float16
+    else:
+        torch_dtype = torch.float32
 
     # Load the model
     time_start_model_loading = time.perf_counter()
     model = AutoModelForSpeechSeq2Seq.from_pretrained(
-        model_name, torch_dtype="auto"
+        model_name, trust_remote_code=True
     ).to(device)
     time_end_model_loading = time.perf_counter()
     time_model_loading = time_end_model_loading - time_start_model_loading
@@ -50,11 +54,15 @@ def run_model(
 
     # Process prompt
     time_start_processing = time.perf_counter()
-    input_features = processor(
-        batch_waveform,
-        sampling_rate=sampling_rate,
-        return_tensors="pt",
-    ).to(device)
+    input_features = (
+        processor(
+            batch_waveform,
+            sampling_rate=sampling_rate,
+            return_tensors="pt",
+        )
+        .to(torch_dtype)
+        .to(device)
+    )
     time_end_processing = time.perf_counter()
     time_processing = time_end_processing - time_start_processing
 
@@ -242,7 +250,7 @@ def run_all_benchmark(test_scenario):
     n_iterations = WHISPER_PERF_BENCHMARK_CONFIG_DICT[test_scenario]["n_iterations"]
 
     # Warm up
-    # run_model(model_name, np.random.normal(0, 0.5, 93680), 16000, 8)
+    run_benchmark(model_name, 8, 1, 1, verbose_run=False, verbose_summary=False)
 
     # Run benchmarks
     for output_token_length in output_token_length_list:
