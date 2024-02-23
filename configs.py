@@ -2,14 +2,14 @@ PERF_BENCHMARK_CONFIG_DICT = {
     "phi-2": {
         "model_name": "microsoft/phi-2",
         "input_token_length": [32, 256, 1024, 2048],
-        "output_token_length": [1, 32, 64, 128],
+        "output_token_length": [32, 64, 128],
         "batch_size": [1, 8, 32],
         "n_iterations": 5,
     },
     "gpt2-xl": {
         "model_name": "openai-community/gpt2-xl",
         "input_token_length": [32, 256, 512],
-        "output_token_length": [1, 32, 64, 256],
+        "output_token_length": [32, 64, 256],
         "batch_size": [1, 8, 32, 64],
         "n_iterations": 5,
     },
