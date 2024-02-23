@@ -260,7 +260,6 @@ def run_all_benchmark(test_scenario):
 
 
 if __name__ == "__main__":
-    torch.set_default_device("cuda")
     transformers.logging.set_verbosity_error()
     args = parse_args()
     run_all_benchmark(args.test_scenario)
