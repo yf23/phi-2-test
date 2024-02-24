@@ -32,7 +32,7 @@ def run_model(
     sampling_rate,
     output_token_length,
 ):
-    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    device = "cuda:0"
 
     # Load the model
     time_start_model_loading = time.perf_counter()
@@ -267,6 +267,16 @@ def run_all_benchmark(test_scenario):
 
 
 if __name__ == "__main__":
+    # Check CUDA availability
+    if not torch.cuda.is_available():
+        print("CUDA is not available. Exiting.")
+        exit()
+
+    # Set logging verbosity
     transformers.logging.set_verbosity_error()
+
+    # Parse arguments
     args = parse_args()
+
+    # Run benchmark
     run_all_benchmark(args.test_scenario)
