@@ -63,9 +63,6 @@ def run_model(
     time_processing = time_end_processing - time_start_processing
 
     # Generate output
-    print("Model's dtype: ", model.dtype)
-    print("Input features' dtype: ", input_features["input_features"].dtype)
-
     streamer = ThroughputStreamer()
     time_start_generation = time.perf_counter()
     outputs = model.generate(
@@ -73,7 +70,7 @@ def run_model(
         min_new_tokens=output_token_length,
         max_new_tokens=output_token_length,
         streamer=streamer,
-        language='en'
+        language="en",
     )
     time_end_generation = time.perf_counter()
     streamer.set_latencies(time_start_generation, time_end_generation)
