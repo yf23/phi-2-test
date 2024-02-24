@@ -33,10 +33,6 @@ def run_model(
     output_token_length,
 ):
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
-    if model_name == "openai/whisper-large-v3" and torch.cuda.is_available():
-        torch_dtype = torch.float16
-    else:
-        torch_dtype = torch.float32
 
     # Load the model
     time_start_model_loading = time.perf_counter()
@@ -60,13 +56,16 @@ def run_model(
             sampling_rate=sampling_rate,
             return_tensors="pt",
         )
-        .to(torch_dtype)
+        .to(model.dtype)
         .to(device)
     )
     time_end_processing = time.perf_counter()
     time_processing = time_end_processing - time_start_processing
 
     # Generate output
+    print("Model's dtype: ", model.dtype)
+    print("Input features' dtype: ", input_features["input_values"].dtype)
+
     streamer = ThroughputStreamer()
     time_start_generation = time.perf_counter()
     outputs = model.generate(
