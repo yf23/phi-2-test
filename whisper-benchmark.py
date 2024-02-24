@@ -37,7 +37,7 @@ def run_model(
     # Load the model
     time_start_model_loading = time.perf_counter()
     model = AutoModelForSpeechSeq2Seq.from_pretrained(
-        model_name, trust_remote_code=True
+        model_name, trust_remote_code=True, torch_dtype="auto"
     ).to(device)
     time_end_model_loading = time.perf_counter()
     time_model_loading = time_end_model_loading - time_start_model_loading
