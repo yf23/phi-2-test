@@ -64,7 +64,7 @@ def run_model(
 
     # Generate output
     print("Model's dtype: ", model.dtype)
-    print("Input features' dtype: ", input_features["input_values"].dtype)
+    print("Input features' dtype: ", input_features["input_features"].dtype)
 
     streamer = ThroughputStreamer()
     time_start_generation = time.perf_counter()
