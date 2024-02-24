@@ -73,6 +73,7 @@ def run_model(
         min_new_tokens=output_token_length,
         max_new_tokens=output_token_length,
         streamer=streamer,
+        language='en'
     )
     time_end_generation = time.perf_counter()
     streamer.set_latencies(time_start_generation, time_end_generation)
