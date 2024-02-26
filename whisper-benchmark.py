@@ -126,7 +126,7 @@ def run_model(
     time_start_output_decoding = time.perf_counter()
     processor.batch_decode(outputs)
     time_end_output_decoding = time.perf_counter()
-    print(processor.batch_decode(outputs) + "\n")
+    print(processor.batch_decode(outputs), end="\n\n")
     time_output_decoding = time_end_output_decoding - time_start_output_decoding
 
     # Clean up memory
