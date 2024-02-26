@@ -75,6 +75,7 @@ def run_model(
     batch_waveform,
     sampling_rate,
     output_token_length,
+    verbose_output=False,
 ):
     device = "cuda:0"
 
@@ -124,9 +125,10 @@ def run_model(
 
     # Decode output
     time_start_output_decoding = time.perf_counter()
-    processor.batch_decode(outputs)
+    decoded_outputs = processor.batch_decode(outputs, skip_special_tokens=True)
     time_end_output_decoding = time.perf_counter()
-    print(processor.batch_decode(outputs), end="\n\n")
+    if verbose_output:
+        print(decoded_outputs, end="\n\n")
     time_output_decoding = time_end_output_decoding - time_start_output_decoding
 
     # Clean up memory
@@ -134,6 +136,7 @@ def run_model(
     del processor
     del input_features
     del outputs
+    del decoded_outputs
     time.sleep(10)
     gc.collect()
     torch.cuda.empty_cache()
@@ -156,6 +159,7 @@ def run_benchmark(
     n_iter,
     verbose_run=False,
     verbose_summary=True,
+    verbose_output=False,
     input_audio_waveform=None,
 ):
     # Print parameters in one line
