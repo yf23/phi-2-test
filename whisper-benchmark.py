@@ -133,6 +133,8 @@ def run_benchmark(
     n_iter,
     verbose_run=False,
     verbose_summary=True,
+    input_audio_waveform=None,
+    input_audio_sampling_rate=None,
 ):
     # Print parameters in one line
     if verbose_summary:
@@ -152,21 +154,24 @@ def run_benchmark(
     throughput_generation_list = []
 
     # Input waveform
-    ds = load_dataset(
-        "hf-internal-testing/librispeech_asr_dummy",
-        "clean",
-        split="validation",
-        trust_remote_code=True,
-    )
-    audio_sample = ds[0]["audio"]
-    waveform = audio_sample["array"]
-    sampling_rate = audio_sample["sampling_rate"]
-
-    # Make batch
-    batch_waveform = [
-        waveform + np.random.normal(0, np.std(waveform) * 2, len(waveform))
-        for _ in range(batch_size)
-    ]
+    if not input_audio_waveform:
+        ds = load_dataset(
+            "hf-internal-testing/librispeech_asr_dummy",
+            "clean",
+            split="validation",
+            trust_remote_code=True,
+        )
+        audio_sample = ds[0]["audio"]
+        waveform = audio_sample["array"]
+        sampling_rate = audio_sample["sampling_rate"]
+        batch_waveform = [
+            waveform + np.random.normal(0, np.std(waveform) * 2, len(waveform))
+            for _ in range(batch_size)
+        ]
+    else:
+        waveform = input_audio_waveform
+        sampling_rate = input_audio_sampling_rate
+        batch_waveform = [waveform for _ in range(batch_size)]
 
     # Start benchmarking
     for _ in range(n_iter):
