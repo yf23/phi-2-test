@@ -1,9 +1,12 @@
 import gc
+import os
 import time
 import torch
+import librosa
 import argparse
 import transformers
 import numpy as np
+from pydub import AudioSegment
 from datasets import load_dataset
 from utils import ThroughputStreamer, write_csv_file
 from configs import (
@@ -13,8 +16,39 @@ from configs import (
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 
 
+def valid_input_audio_file(file):
+    ext = os.path.splitext(file)[1]
+    if ext.lower() != ".mp3":
+        raise argparse.ArgumentTypeError(
+            f"The audio file must be in .mp3 format, but got '{ext}'"
+        )
+    return file
+
+
+def extract_and_resample_input_audio(mp3_file_path, target_sr=16000):
+    # Convert MP3 file to WAV format
+    audio = AudioSegment.from_mp3(mp3_file_path)
+    temp_file_path = "temp.wav"  # Temporary file path
+    audio.export(temp_file_path, format="wav")
+
+    # Load the WAV file using librosa
+    waveform, sampling_rate = librosa.load(temp_file_path, sr=None)
+
+    # Resample the waveform to the target sampling rate
+    resampled_waveform = librosa.resample(
+        waveform, orig_sr=sampling_rate, target_sr=target_sr
+    )
+
+    # Clean up the temporary file
+    os.remove(temp_file_path)
+
+    return resampled_waveform
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Whisper performance benchmark")
+
+    # Add test scenario
     parser.add_argument(
         "-s",
         "--test-scenario",
@@ -23,6 +57,16 @@ def parse_args():
         choices=WHISPER_PERF_BENCHMARK_CONFIG_DICT.keys(),
         help="Test scenario to run",
     )
+
+    # Add optional audio file in mp3 format
+    parser.add_argument(
+        "-a",
+        "--audio-file",
+        type=valid_input_audio_file,
+        default=None,
+        help="Path to audio file in mp3 format",
+    )
+
     return parser.parse_args()
 
 
@@ -31,6 +75,7 @@ def run_model(
     batch_waveform,
     sampling_rate,
     output_token_length,
+    verbose_output=False,
 ):
     device = "cuda:0"
 
@@ -80,8 +125,10 @@ def run_model(
 
     # Decode output
     time_start_output_decoding = time.perf_counter()
-    processor.batch_decode(outputs)
+    decoded_outputs = processor.batch_decode(outputs, skip_special_tokens=True)
     time_end_output_decoding = time.perf_counter()
+    if verbose_output:
+        print(decoded_outputs, end="\n\n")
     time_output_decoding = time_end_output_decoding - time_start_output_decoding
 
     # Clean up memory
@@ -89,6 +136,7 @@ def run_model(
     del processor
     del input_features
     del outputs
+    del decoded_outputs
     time.sleep(10)
     gc.collect()
     torch.cuda.empty_cache()
@@ -111,6 +159,8 @@ def run_benchmark(
     n_iter,
     verbose_run=False,
     verbose_summary=True,
+    verbose_output=False,
+    input_audio_waveform=None,
 ):
     # Print parameters in one line
     if verbose_summary:
@@ -130,21 +180,24 @@ def run_benchmark(
     throughput_generation_list = []
 
     # Input waveform
-    ds = load_dataset(
-        "hf-internal-testing/librispeech_asr_dummy",
-        "clean",
-        split="validation",
-        trust_remote_code=True,
-    )
-    audio_sample = ds[0]["audio"]
-    waveform = audio_sample["array"]
-    sampling_rate = audio_sample["sampling_rate"]
-
-    # Make batch
-    batch_waveform = [
-        waveform + np.random.normal(0, np.std(waveform) * 2, len(waveform))
-        for _ in range(batch_size)
-    ]
+    if input_audio_waveform is None:
+        ds = load_dataset(
+            "hf-internal-testing/librispeech_asr_dummy",
+            "clean",
+            split="validation",
+            trust_remote_code=True,
+        )
+        audio_sample = ds[0]["audio"]
+        waveform = audio_sample["array"]
+        sampling_rate = audio_sample["sampling_rate"]
+        batch_waveform = [
+            waveform + np.random.normal(0, np.std(waveform) * 2, len(waveform))
+            for _ in range(batch_size)
+        ]
+    else:
+        waveform = input_audio_waveform
+        sampling_rate = 16000
+        batch_waveform = [waveform for _ in range(batch_size)]
 
     # Start benchmarking
     for _ in range(n_iter):
@@ -249,6 +302,12 @@ def run_all_benchmark(test_scenario):
     # Warm up
     run_benchmark(model_name, 8, 1, 1, verbose_run=False, verbose_summary=False)
 
+    # Load audio file
+    if args.audio_file:
+        input_audio_waveform = extract_and_resample_input_audio(args.audio_file)
+    else:
+        input_audio_waveform = None
+
     # Run benchmarks
     for output_token_length in output_token_length_list:
         for batch_size in batch_size_list:
@@ -257,6 +316,7 @@ def run_all_benchmark(test_scenario):
                 output_token_length,
                 batch_size,
                 n_iterations,
+                input_audio_waveform=input_audio_waveform,
             )
             write_csv_file(
                 f"{model_name},{output_token_length},{batch_size},{','.join(map(str, results))}",
