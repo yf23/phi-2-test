@@ -48,7 +48,7 @@ WHISPER_PERF_BENCHMARK_CONFIG_DICT = {
     "whisper-large-v3-test": {
         "model_name": "openai/whisper-large-v3",
         "output_token_length": [444],
-        "batch_size": [192],
+        "batch_size": [2],
         "n_iterations": 1,
     },
 }
