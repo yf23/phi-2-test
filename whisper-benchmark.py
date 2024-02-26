@@ -2,9 +2,11 @@ import gc
 import os
 import time
 import torch
+import librosa
 import argparse
 import transformers
 import numpy as np
+from pydub import AudioSegment
 from datasets import load_dataset
 from utils import ThroughputStreamer, write_csv_file
 from configs import (
@@ -21,6 +23,26 @@ def valid_input_audio_file(file):
             f"The audio file must be in .mp3 format, but got '{ext}'"
         )
     return file
+
+
+def extract_and_resample_input_audio(mp3_file_path, target_sr=16000):
+    # Convert MP3 file to WAV format
+    audio = AudioSegment.from_mp3(mp3_file_path)
+    temp_file_path = "temp.wav"  # Temporary file path
+    audio.export(temp_file_path, format="wav")
+
+    # Load the WAV file using librosa
+    waveform, sampling_rate = librosa.load(temp_file_path, sr=None)
+
+    # Resample the waveform to the target sampling rate
+    resampled_waveform = librosa.resample(
+        waveform, orig_sr=sampling_rate, target_sr=target_sr
+    )
+
+    # Clean up the temporary file
+    os.remove(temp_file_path)
+
+    return resampled_waveform
 
 
 def parse_args():
@@ -134,7 +156,6 @@ def run_benchmark(
     verbose_run=False,
     verbose_summary=True,
     input_audio_waveform=None,
-    input_audio_sampling_rate=None,
 ):
     # Print parameters in one line
     if verbose_summary:
@@ -170,7 +191,7 @@ def run_benchmark(
         ]
     else:
         waveform = input_audio_waveform
-        sampling_rate = input_audio_sampling_rate
+        sampling_rate = 16000
         batch_waveform = [waveform for _ in range(batch_size)]
 
     # Start benchmarking
@@ -276,6 +297,12 @@ def run_all_benchmark(test_scenario):
     # Warm up
     run_benchmark(model_name, 8, 1, 1, verbose_run=False, verbose_summary=False)
 
+    # Load audio file
+    if args.audio_file:
+        input_audio_waveform = extract_and_resample_input_audio(args.audio_file)
+    else:
+        input_audio_waveform = None
+
     # Run benchmarks
     for output_token_length in output_token_length_list:
         for batch_size in batch_size_list:
@@ -284,6 +311,7 @@ def run_all_benchmark(test_scenario):
                 output_token_length,
                 batch_size,
                 n_iterations,
+                input_audio_waveform=input_audio_waveform,
             )
             write_csv_file(
                 f"{model_name},{output_token_length},{batch_size},{','.join(map(str, results))}",
