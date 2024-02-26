@@ -1,4 +1,5 @@
 import gc
+import os
 import time
 import torch
 import argparse
@@ -13,8 +14,19 @@ from configs import (
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 
 
+def valid_input_audio_file(file):
+    ext = os.path.splitext(file)[1]
+    if ext.lower() != ".mp3":
+        raise argparse.ArgumentTypeError(
+            f"The audio file must be in .mp3 format, but got '{ext}'"
+        )
+    return file
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Whisper performance benchmark")
+
+    # Add test scenario
     parser.add_argument(
         "-s",
         "--test-scenario",
@@ -23,6 +35,16 @@ def parse_args():
         choices=WHISPER_PERF_BENCHMARK_CONFIG_DICT.keys(),
         help="Test scenario to run",
     )
+
+    # Add optional audio file in mp3 format
+    parser.add_argument(
+        "-a",
+        "--audio-file",
+        type=valid_input_audio_file,
+        default=None,
+        help="Path to audio file in mp3 format",
+    )
+
     return parser.parse_args()
 
 
