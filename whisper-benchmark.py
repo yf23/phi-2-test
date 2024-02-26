@@ -175,7 +175,7 @@ def run_benchmark(
     throughput_generation_list = []
 
     # Input waveform
-    if not input_audio_waveform:
+    if input_audio_waveform is None:
         ds = load_dataset(
             "hf-internal-testing/librispeech_asr_dummy",
             "clean",
